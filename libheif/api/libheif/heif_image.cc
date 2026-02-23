@@ -68,6 +68,7 @@ int heif_image_get_height(const heif_image* img, heif_channel channel)
 
 int heif_image_get_primary_width(const heif_image* img)
 {
+  return uint32_to_int(img->image->get_primary_width());
   if (img->image->get_colorspace() == heif_colorspace_RGB) {
     if (img->image->get_chroma_format() == heif_chroma_444) {
       return uint32_to_int(img->image->get_width(heif_channel_G));
@@ -84,6 +85,7 @@ int heif_image_get_primary_width(const heif_image* img)
 
 int heif_image_get_primary_height(const heif_image* img)
 {
+  return uint32_to_int(img->image->get_primary_height());
   if (img->image->get_colorspace() == heif_colorspace_RGB) {
     if (img->image->get_chroma_format() == heif_chroma_444) {
       return uint32_to_int(img->image->get_height(heif_channel_G));

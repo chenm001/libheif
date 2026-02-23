@@ -716,6 +716,38 @@ uint32_t HeifPixelImage::get_height(enum heif_channel channel) const
 }
 
 
+uint32_t HeifPixelImage::get_primary_width() const
+{
+  if (m_colorspace == heif_colorspace_RGB) {
+    if (m_chroma == heif_chroma_444) {
+      return get_width(heif_channel_G);
+    }
+    else {
+      return get_width(heif_channel_interleaved);
+    }
+  }
+  else {
+    return get_width(heif_channel_Y);
+  }
+}
+
+
+uint32_t HeifPixelImage::get_primary_height() const
+{
+  if (m_colorspace == heif_colorspace_RGB) {
+    if (m_chroma == heif_chroma_444) {
+      return get_height(heif_channel_G);
+    }
+    else {
+      return get_height(heif_channel_interleaved);
+    }
+  }
+  else {
+    return get_height(heif_channel_Y);
+  }
+}
+
+
 std::set<heif_channel> HeifPixelImage::get_channel_set() const
 {
   std::set<heif_channel> channels;

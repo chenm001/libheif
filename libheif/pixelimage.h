@@ -243,6 +243,12 @@ public:
 
   bool has_odd_height() const { return !!(m_height & 1); }
 
+  // TODO: currently only defined for colorspace RGB, YCbCr, Monochrome
+  uint32_t get_primary_width() const;
+
+  // TODO: currently only defined for colorspace RGB, YCbCr, Monochrome
+  uint32_t get_primary_height() const;
+
   heif_chroma get_chroma_format() const { return m_chroma; }
 
   heif_colorspace get_colorspace() const { return m_colorspace; }
