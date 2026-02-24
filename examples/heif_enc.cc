@@ -129,6 +129,7 @@ std::string option_sai_data_file;
 #if HEIF_WITH_OMAF
 std::optional<heif_omaf_image_projection> omaf_image_projection;
 #endif
+std::vector<heif_brand2> additional_compatible_brands;
 
 enum heif_output_nclx_color_profile_preset
 {
@@ -198,6 +199,7 @@ const int OPTION_USE_HEVC_COMPRESSION = 1037;
 #if HEIF_WITH_OMAF
 const int OPTION_SET_OMAF_IMAGE_PROJECTION = 1038;
 #endif
+const int OPTION_ADD_COMPATIBLE_BRAND = 1039;
 
 static option long_options[] = {
     {(char* const) "help",                    no_argument,       0,              'h'},
@@ -269,6 +271,7 @@ static option long_options[] = {
 #if HEIF_WITH_OMAF
     {(char* const) "omaf-image-projection",       required_argument,       nullptr, OPTION_SET_OMAF_IMAGE_PROJECTION},
 #endif
+    {(char* const) "add-compatible-brand",        required_argument,       nullptr, OPTION_ADD_COMPATIBLE_BRAND},
     {0, 0,                                                           0,  0}
 };
 
@@ -317,14 +320,15 @@ void show_help(const char* argv0)
   }
   std::cerr << "}.\n"
 #endif
-            << "  -C, --chroma-downsampling ALGO force chroma downsampling algorithm (nn = nearest-neighbor / average / sharp-yuv)\n"
-            << "                                 (sharp-yuv makes edges look sharper when using YUV420 with bilinear chroma upsampling)\n"
-            << "      --benchmark                measure encoding time, PSNR, and output file size\n"
-            << "      --pitm-description TEXT    set user description for primary image (experimental)\n"
+            << "  -C, --chroma-downsampling ALGO    force chroma downsampling algorithm (nn = nearest-neighbor / average / sharp-yuv)\n"
+            << "                                    (sharp-yuv makes edges look sharper when using YUV420 with bilinear chroma upsampling)\n"
+            << "      --benchmark                   measure encoding time, PSNR, and output file size\n"
+            << "      --pitm-description TEXT       set user description for primary image (experimental)\n"
 #if HEIF_ENABLE_EXPERIMENTAL_FEATURES
-            << "      --add-mime-item TYPE       add a mime item of the specified content type (experimental)\n"
-            << "      --mime-item-file FILE      use the specified FILE as the data to put into the mime item (experimental)\n"
+            << "      --add-mime-item TYPE          add a mime item of the specified content type (experimental)\n"
+            << "      --mime-item-file FILE         use the specified FILE as the data to put into the mime item (experimental)\n"
 #endif
+            << "      --add-compatible-brand BRAND  add a compatible brand to the output file (4 characters)\n"
             << "\n"
             << "codecs:\n"
             << "  -A, --avif                     encode as AVIF (not needed if output filename with .avif suffix is provided)\n"
@@ -1630,6 +1634,13 @@ int main(int argc, char** argv)
         }
         break;
 #endif
+      case OPTION_ADD_COMPATIBLE_BRAND:
+        if (strlen(optarg) != 4) {
+          std::cerr << "Brand must be exactly 4 characters\n";
+          return 5;
+        }
+        additional_compatible_brands.push_back(heif_fourcc_to_brand(optarg));
+        break;
     }
   }
 
@@ -1873,6 +1884,10 @@ int main(int argc, char** argv)
 
 
   // --- write HEIF file
+
+  for (heif_brand2 brand : additional_compatible_brands) {
+    heif_context_add_compatible_brand(context.get(), brand);
+  }
 
   heif_error error = heif_context_write_to_file(context.get(), output_filename.c_str());
   if (error.code) {
