@@ -215,12 +215,12 @@ std::shared_ptr<Box_colr> ImageExtraData::get_colr_box_icc() const
 #if HEIF_WITH_OMAF
 std::shared_ptr<Box_prfr> ImageExtraData::get_prfr_box() const
 {
-  if (!has_image_projection()) {
+  if (!has_omaf_image_projection()) {
     return {};
   }
 
   auto prfr = std::make_shared<Box_prfr>();
-  prfr->set_image_projection(get_image_projection());
+  prfr->set_image_projection(get_omaf_image_projection());
 
   return prfr;
 }
@@ -281,9 +281,9 @@ std::vector<std::shared_ptr<Box>> ImageExtraData::generate_property_boxes(bool g
   }
 
 #if HEIF_WITH_OMAF
-  if (has_image_projection()) {
+  if (has_omaf_image_projection()) {
     auto prfr = std::make_shared<Box_prfr>();
-    prfr->set_image_projection(get_image_projection());
+    prfr->set_image_projection(get_omaf_image_projection());
     properties.push_back(prfr);
   }
 #endif
@@ -1898,7 +1898,7 @@ void HeifPixelImage::forward_all_metadata_from(const std::shared_ptr<const HeifP
   // TODO: should we also forward the warnings? It might be better to do that in ImageItem_Grid.
 
 #if HEIF_WITH_OMAF
-  set_image_projection(src_image->get_image_projection());
+  set_omaf_image_projection(src_image->get_omaf_image_projection());
 #endif
 }
 

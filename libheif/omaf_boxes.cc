@@ -37,13 +37,13 @@ Error Box_prfr::parse(BitstreamRange& range, const heif_security_limits* limits)
   switch (projection_type)
   {
   case 0x00:
-    m_projection = heif_image_projection::equirectangular;
+    m_projection = heif_omaf_image_projection::heif_omaf_image_projection_equirectangular;
     break;
   case 0x01:
-    m_projection = heif_image_projection::cube_map;
+    m_projection = heif_omaf_image_projection::heif_omaf_image_projection_cube_map;
     break;
   default:
-    m_projection = heif_image_projection::unknown_other;
+    m_projection = heif_omaf_image_projection::heif_omaf_image_projection_unknown;
     break;
   }
   return range.get_error();
@@ -61,10 +61,10 @@ Error Box_prfr::write(StreamWriter& writer) const
 {
   size_t box_start = reserve_box_header_space(writer);
   switch (m_projection) {
-    case heif_image_projection::equirectangular:
+    case heif_omaf_image_projection::heif_omaf_image_projection_equirectangular:
       writer.write8(0x00);
       break;
-    case heif_image_projection::cube_map:
+    case heif_omaf_image_projection::heif_omaf_image_projection_cube_map:
       writer.write8(0x01);
       break;
     default:
@@ -78,9 +78,9 @@ Error Box_prfr::write(StreamWriter& writer) const
   return Error::Ok;
 }
 
-Error Box_prfr::set_image_projection(heif_image_projection projection)
+Error Box_prfr::set_image_projection(heif_omaf_image_projection projection)
 {
-  if ((projection == heif_image_projection::equirectangular) || (projection == heif_image_projection::cube_map)) {
+  if ((projection == heif_omaf_image_projection::heif_omaf_image_projection_equirectangular) || (projection == heif_omaf_image_projection::heif_omaf_image_projection_cube_map)) {
     m_projection = projection;
     return Error::Ok;
   } else {

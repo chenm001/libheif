@@ -681,9 +681,9 @@ void ImageItem::set_color_profile_icc(const std::shared_ptr<const color_profile_
 }
 
 #if HEIF_WITH_OMAF
-void ImageItem::set_image_projection(heif_image_projection projection)
+void ImageItem::set_omaf_image_projection(heif_omaf_image_projection projection)
 {
-  ImageExtraData::set_image_projection(projection);
+  ImageExtraData::set_omaf_image_projection(projection);
   add_property(get_prfr_box(), true);
 }
 #endif
@@ -923,7 +923,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
     // Image projection (OMAF)
     auto prfr = get_property<Box_prfr>();
     if (prfr) {
-      img->set_image_projection(prfr->get_image_projection());
+      img->set_omaf_image_projection(prfr->get_omaf_image_projection());
     }
 #endif
   }

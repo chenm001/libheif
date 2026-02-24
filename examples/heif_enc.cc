@@ -127,8 +127,7 @@ std::string option_gimi_track_id;
 std::string option_sai_data_file;
 
 #if HEIF_WITH_OMAF
-int option_image_projection;
-heif_image_projection image_projection = heif_image_projection::flat;
+std::optional<heif_omaf_image_projection> omaf_image_projection;
 #endif
 
 enum heif_output_nclx_color_profile_preset
@@ -197,7 +196,7 @@ const int OPTION_SEQUENCES_GIMI_TRACK_ID = 1035;
 const int OPTION_SEQUENCES_SAI_DATA_FILE = 1036;
 const int OPTION_USE_HEVC_COMPRESSION = 1037;
 #if HEIF_WITH_OMAF
-const int OPTION_SET_IMAGE_PROJECTION = 1038;
+const int OPTION_SET_OMAF_IMAGE_PROJECTION = 1038;
 #endif
 
 static option long_options[] = {
@@ -268,7 +267,7 @@ static option long_options[] = {
     {(char* const) "set-gimi-track-id",           required_argument,       nullptr, OPTION_SEQUENCES_GIMI_TRACK_ID},
     {(char* const) "sai-data-file",               required_argument,       nullptr, OPTION_SEQUENCES_SAI_DATA_FILE},
 #if HEIF_WITH_OMAF
-    {(char* const) "image-projection",            required_argument,       nullptr, OPTION_SET_IMAGE_PROJECTION},
+    {(char* const) "omaf-image-projection",       required_argument,       nullptr, OPTION_SET_OMAF_IMAGE_PROJECTION},
 #endif
     {0, 0,                                                           0,  0}
 };
@@ -405,7 +404,7 @@ void show_help(const char* argv0)
 #endif
 #if HEIF_WITH_OMAF
             << "omnidirectional imagery:\n"
-            << "      --image-projection proj    set the image projection (0 = equirectangular, 1 = cube map)\n"
+            << "      --omaf-image-projection PROJ    set the image projection (equirectangular, cube-map)\n"
 #endif
             ;
 }
@@ -1620,14 +1619,13 @@ int main(int argc, char** argv)
         option_sai_data_file = optarg;
         break;
 #if HEIF_WITH_OMAF
-      case OPTION_SET_IMAGE_PROJECTION:
-        option_image_projection = atoi(optarg);
-        if (option_image_projection == 0) {
-          image_projection = heif_image_projection::equirectangular;
-        } else if (option_image_projection == 1) {
-          image_projection = heif_image_projection::cube_map;
+      case OPTION_SET_OMAF_IMAGE_PROJECTION:
+        if (strcmp(optarg, "equirectangular") == 0) {
+          omaf_image_projection = heif_omaf_image_projection_equirectangular;
+        } else if (strcmp(optarg, "cube-map") == 0) {
+          omaf_image_projection = heif_omaf_image_projection_cube_map;
         } else {
-          std::cerr << "image projection must be 0 or 1\n";
+          std::cerr << "image projection must be 'equirectangular' or 'cube-map'\n";
           return 5;
         }
         break;
@@ -2047,8 +2045,8 @@ int do_encode_images(heif_context* context, heif_encoder* encoder, heif_encoding
     }
 
 #if HEIF_WITH_OMAF
-    if (image_projection != heif_image_projection::flat) {
-      heif_image_handle_set_image_projection(handle, image_projection);
+    if (omaf_image_projection) {
+      heif_image_handle_set_omaf_image_projection(handle, *omaf_image_projection);
     }
 #endif
 

@@ -181,16 +181,16 @@ public:
   std::string get_gimi_sample_content_id() const { assert(has_gimi_sample_content_id()); return *m_gimi_sample_content_id; }
 
 #if HEIF_WITH_OMAF
-  bool has_image_projection() const {
-    return (m_image_projection != heif_image_projection::flat);
+  bool has_omaf_image_projection() const {
+    return (m_omaf_image_projection != heif_omaf_image_projection_flat);
   }
 
-  const heif_image_projection get_image_projection() const {
-    return m_image_projection;
+  const heif_omaf_image_projection get_omaf_image_projection() const {
+    return m_omaf_image_projection;
   }
 
-  virtual void set_image_projection(const heif_image_projection projection) {
-    m_image_projection = projection;
+  virtual void set_omaf_image_projection(const heif_omaf_image_projection projection) {
+    m_omaf_image_projection = projection;
   }
 #endif
 
@@ -209,7 +209,7 @@ private:
   std::optional<std::string> m_gimi_sample_content_id;
 
 #if HEIF_WITH_OMAF
-  heif_image_projection m_image_projection = heif_image_projection::flat;
+  heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;
 #endif
 
 protected:

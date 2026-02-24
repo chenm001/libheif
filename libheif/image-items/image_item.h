@@ -288,7 +288,7 @@ public:
   void set_color_profile_icc(const std::shared_ptr<const color_profile_raw>& profile) override;
 
 #if HEIF_WITH_OMAF
-  void set_image_projection(heif_image_projection image_projection) override;
+  void set_omaf_image_projection(heif_omaf_image_projection image_projection) override;
 #endif
 
   // --- miaf

@@ -47,7 +47,7 @@ TEST_CASE("prfr") {
   REQUIRE(box->get_short_type() == fourcc("prfr"));
   REQUIRE(box->get_type_string() == "prfr");
   std::shared_ptr<Box_prfr> prfr = std::dynamic_pointer_cast<Box_prfr>(box);
-  REQUIRE(prfr->get_image_projection() == heif_image_projection::cube_map);
+  REQUIRE(prfr->get_omaf_image_projection() == heif_omaf_image_projection_cube_map);
   Indent indent;
   std::string dumpResult = box->dump(indent);
   REQUIRE(dumpResult == "Box: prfr ----- (Projection Format)\n"

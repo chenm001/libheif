@@ -229,15 +229,15 @@ heif_error heif_camera_extrinsic_matrix_get_rotation_matrix(const heif_camera_ex
                                                             double* out_matrix_row_major);
 
 #if HEIF_WITH_OMAF
-// ------------------------- projection information -------------------------
+// ------------------------- OMAF projection information -------------------------
 LIBHEIF_API
-int heif_image_handle_has_image_projection(const heif_image_handle* handle);
+int heif_image_handle_has_omaf_image_projection(const heif_image_handle* handle);
 
 LIBHEIF_API
-heif_image_projection heif_image_handle_get_image_projection(const heif_image_handle* handle);
+heif_omaf_image_projection heif_image_handle_get_omaf_image_projection(const heif_image_handle* handle);
 
 LIBHEIF_API
-void heif_image_handle_set_image_projection(const heif_image_handle* handle, heif_image_projection image_projection);
+void heif_image_handle_set_omaf_image_projection(const heif_image_handle* handle, heif_omaf_image_projection image_projection);
 #endif
 
 #ifdef __cplusplus

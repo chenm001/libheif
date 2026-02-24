@@ -19,8 +19,8 @@
  * along with libheif.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBHEIF_MINI_H
-#define LIBHEIF_MINI_H
+#ifndef LIBHEIF_OMAF_BOXES_H
+#define LIBHEIF_OMAF_BOXES_H
 
 #include "libheif/heif.h"
 #include "box.h"
@@ -38,9 +38,9 @@ public:
     set_short_type(fourcc("prfr"));
   }
 
-  heif_image_projection get_image_projection() const { return m_projection; }
+  heif_omaf_image_projection get_omaf_image_projection() const { return m_projection; }
 
-  Error set_image_projection(heif_image_projection projection);
+  Error set_image_projection(heif_omaf_image_projection projection);
 
   std::string dump(Indent&) const override;
 
@@ -54,7 +54,7 @@ protected:
   Error parse(BitstreamRange& range, const heif_security_limits*) override;
 
 private:
-  heif_image_projection m_projection;
+  heif_omaf_image_projection m_projection;
 };
 
 #endif

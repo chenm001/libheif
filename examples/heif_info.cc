@@ -781,16 +781,16 @@ int main(int argc, char** argv)
 #if HEIF_WITH_OMAF
     // --- OMAF
 
-    if (heif_image_handle_has_image_projection(handle)) {
-      heif_image_projection projection = heif_image_handle_get_image_projection(handle);
+    if (heif_image_handle_has_omaf_image_projection(handle)) {
+      heif_omaf_image_projection projection = heif_image_handle_get_omaf_image_projection(handle);
       std::cout << "  image projection: ";
       switch (projection)
       {
-      case heif_image_projection::equirectangular:
+      case heif_omaf_image_projection_equirectangular:
         std::cout << "equirectangular";
         break;
-      case heif_image_projection::cube_map:
-        std::cout << "cube map";
+      case heif_omaf_image_projection_cube_map:
+        std::cout << "cube-map";
       default:
         std::cout << "(unknown)";
         break;

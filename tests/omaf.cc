@@ -42,7 +42,7 @@ static heif_encoding_options * set_encoding_options()
   return options;
 }
 
-static void do_encode(heif_image* input_image, const char* filename, heif_image_projection projection)
+static void do_encode(heif_image* input_image, const char* filename, heif_omaf_image_projection projection)
 {
   REQUIRE(input_image != nullptr);
   heif_init(nullptr);
@@ -58,7 +58,7 @@ static void do_encode(heif_image* input_image, const char* filename, heif_image_
 
   err = heif_context_encode_image(ctx, input_image, encoder, options, &output_image_handle);
   REQUIRE(err.code == heif_error_Ok);
-  heif_image_handle_set_image_projection(output_image_handle, projection);
+  heif_image_handle_set_omaf_image_projection(output_image_handle, projection);
   err = heif_context_write_to_file(ctx, filename);
   REQUIRE(err.code == heif_error_Ok);
 
@@ -71,7 +71,7 @@ static void do_encode(heif_image* input_image, const char* filename, heif_image_
 
   heif_context *readbackCtx = get_context_for_local_file(filename);
   heif_image_handle *readbackHandle = get_primary_image_handle(readbackCtx);
-  heif_image_projection readbackProjection = heif_image_handle_get_image_projection(readbackHandle);
+  heif_omaf_image_projection readbackProjection = heif_image_handle_get_omaf_image_projection(readbackHandle);
   REQUIRE(readbackProjection == projection);
   heif_image_handle_release(readbackHandle);
   heif_context_free(readbackCtx);
@@ -82,11 +82,11 @@ static void do_encode(heif_image* input_image, const char* filename, heif_image_
 TEST_CASE("Encode OMAF HEIC")
 {
   heif_image *input_image = createImage_RGB_planar();
-  do_encode(input_image, "encode_omaf_equirectangular.heic", heif_image_projection::equirectangular);
+  do_encode(input_image, "encode_omaf_equirectangular.heic", heif_omaf_image_projection::heif_omaf_image_projection_equirectangular);
 }
 
 TEST_CASE("Encode OMAF HEIC Cubemap")
 {
   heif_image *input_image = createImage_RGB_planar();
-  do_encode(input_image, "encode_omaf_cubemap.heic", heif_image_projection::cube_map);
+  do_encode(input_image, "encode_omaf_cubemap.heic", heif_omaf_image_projection::heif_omaf_image_projection_cube_map);
 }
