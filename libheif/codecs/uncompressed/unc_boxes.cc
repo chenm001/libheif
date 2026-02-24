@@ -956,30 +956,30 @@ Error Box_cpat::parse(BitstreamRange& range, const heif_security_limits* limits)
     return unsupported_version_error("cpat");
   }
 
-  m_pattern_width = range.read16();
-  m_pattern_height = range.read16();
+  m_pattern.m_pattern_width = range.read16();
+  m_pattern.m_pattern_height = range.read16();
 
-  if (m_pattern_width == 0 || m_pattern_height == 0) {
+  if (m_pattern.m_pattern_width == 0 || m_pattern.m_pattern_height == 0) {
     return {heif_error_Invalid_input,
             heif_suberror_Invalid_parameter_value,
             "Zero Bayer pattern size."};
   }
 
   auto max_bayer_pattern_size = limits->max_bayer_pattern_pixels;
-  if (max_bayer_pattern_size && m_pattern_height > max_bayer_pattern_size / m_pattern_width) {
+  if (max_bayer_pattern_size && m_pattern.m_pattern_height > max_bayer_pattern_size / m_pattern.m_pattern_width) {
     return {heif_error_Invalid_input,
             heif_suberror_Security_limit_exceeded,
             "Maximum Bayer pattern size exceeded."};
   }
 
-  m_components.resize(size_t{m_pattern_width} * m_pattern_height);
+  m_pattern.m_components.resize(size_t{m_pattern.m_pattern_width} * m_pattern.m_pattern_height);
 
-  for (uint16_t i = 0; i < m_pattern_height; i++) {
-    for (uint16_t j = 0; j < m_pattern_width; j++) {
-      PatternComponent component{};
+  for (uint16_t i = 0; i < m_pattern.m_pattern_height; i++) {
+    for (uint16_t j = 0; j < m_pattern.m_pattern_width; j++) {
+      BayerPattern::PatternComponent component{};
       component.component_index = range.read32();
       component.component_gain = range.read_float32();
-      m_components[i] = component;
+      m_pattern.m_components[i] = component;
     }
   }
 
@@ -995,7 +995,7 @@ std::string Box_cpat::dump(Indent& indent) const
   sstr << indent << "pattern_width: " << get_pattern_width() << "\n";
   sstr << indent << "pattern_height: " << get_pattern_height() << "\n";
 
-  for (const auto& component : m_components) {
+  for (const auto& component : m_pattern.m_components) {
     sstr << indent << "component index: " << component.component_index << ", gain: " << component.component_gain << "\n";
   }
   return sstr.str();
@@ -1006,17 +1006,17 @@ Error Box_cpat::write(StreamWriter& writer) const
 {
   size_t box_start = reserve_box_header_space(writer);
 
-  if (m_pattern_width * size_t{m_pattern_height} != m_components.size()) {
+  if (m_pattern.m_pattern_width * size_t{m_pattern.m_pattern_height} != m_pattern.m_components.size()) {
     // needs to be rectangular
     return {heif_error_Usage_error,
             heif_suberror_Invalid_parameter_value,
             "incorrect number of pattern components"};
   }
 
-  writer.write16(m_pattern_width);
-  writer.write16(m_pattern_height);
+  writer.write16(m_pattern.m_pattern_width);
+  writer.write16(m_pattern.m_pattern_height);
 
-  for (const auto& component : m_components) {
+  for (const auto& component : m_pattern.m_components) {
     writer.write32(component.component_index);
     writer.write_float32(component.component_gain);
   }
@@ -1024,4 +1024,10 @@ Error Box_cpat::write(StreamWriter& writer) const
   prepend_header(writer, box_start);
 
   return Error::Ok;
+}
+
+
+void Box_cpat::set_bayer_pattern(const BayerPattern& pattern)
+{
+  m_pattern = pattern;
 }

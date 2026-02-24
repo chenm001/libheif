@@ -39,6 +39,8 @@
 #include <cassert>
 #include <string>
 
+#include "codecs/uncompressed/unc_types.h"
+
 heif_chroma chroma_from_subsampling(int h, int v);
 
 uint32_t chroma_width(uint32_t w, heif_chroma chroma);
@@ -194,6 +196,12 @@ public:
   }
 #endif
 
+  void set_bayer_pattern(const BayerPattern& pattern) { m_bayer_pattern = pattern; }
+
+  bool has_bayer_pattern() const { return m_bayer_pattern.has_value(); }
+
+  const BayerPattern& get_bayer_pattern() const { assert(m_bayer_pattern); return *m_bayer_pattern; }
+
 private:
   bool m_premultiplied_alpha = false;
   nclx_profile m_color_profile_nclx = nclx_profile::undefined();
@@ -211,6 +219,8 @@ private:
 #if HEIF_WITH_OMAF
   heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;
 #endif
+
+  std::optional<BayerPattern> m_bayer_pattern;
 
 protected:
   std::shared_ptr<Box_clli> get_clli_box() const;

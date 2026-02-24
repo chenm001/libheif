@@ -129,9 +129,8 @@ Error UncompressedImageCodec::get_heif_chroma_uncompressed(const std::shared_ptr
   }
 
   if (componentSet == (1 << component_type_filter_array)) {
-    // TODO - we should look up the components
-    *out_chroma = heif_chroma_monochrome;
-    *out_colourspace = heif_colorspace_monochrome;
+    *out_chroma = heif_chroma_monochrome; // TODO: ?
+    *out_colourspace = heif_colorspace_filter_array;
   }
 
   // TODO: more combinations
@@ -446,6 +445,7 @@ void UncompressedImageCodec::unci_properties::fill_from_image_item(const std::sh
   uncC = uncC_mut;
   cmpC = image->get_property<Box_cmpC>();
   icef = image->get_property<Box_icef>();
+  cpat = image->get_property<Box_cpat>();
 }
 
 

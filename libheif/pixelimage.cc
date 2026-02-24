@@ -883,6 +883,9 @@ uint8_t HeifPixelImage::get_visual_image_bits_per_pixel() const
     case heif_colorspace_nonvisual:
       return 0;
       break;
+    case heif_colorspace_filter_array:
+      assert(has_channel(heif_channel_filter_array));
+      return get_bits_per_pixel(heif_channel_filter_array);
     default:
       assert(false);
       return 0;

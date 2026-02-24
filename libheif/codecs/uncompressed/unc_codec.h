@@ -63,6 +63,7 @@ public:
     std::shared_ptr<const Box_uncC> uncC;
     std::shared_ptr<const Box_cmpC> cmpC;
     std::shared_ptr<const Box_icef> icef;
+    std::shared_ptr<const Box_cpat> cpat;
     // ...
 
     void fill_from_image_item(const std::shared_ptr<const ImageItem>&);

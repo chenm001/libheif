@@ -454,6 +454,10 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
 
   auto img = *createImgResult;
 
+  if (properties.cpat) {
+    img->set_bayer_pattern(properties.cpat->get_bayer_pattern());
+  }
+
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);
   if (!decoderResult) {
     return decoderResult.error();

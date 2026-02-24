@@ -23,6 +23,7 @@
 #define LIBHEIF_UNC_TYPES_H
 
 #include <cstdint>
+#include <vector>
 
 /**
  * Component type.
@@ -287,6 +288,18 @@ enum heif_uncompressed_interleave_mode
 };
 
 
+struct BayerPattern
+{
+  struct PatternComponent
+  {
+    uint32_t component_index;
+    float component_gain;
+  };
+
+  uint16_t m_pattern_width = 0;
+  uint16_t m_pattern_height = 0;
+  std::vector<PatternComponent> m_components;
+};
 
 
 #endif //LIBHEIF_UNC_TYPES_H

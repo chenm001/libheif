@@ -354,21 +354,19 @@ public:
     set_short_type(fourcc("cpat"));
   }
 
-  struct PatternComponent
-  {
-    uint32_t component_index;
-    float component_gain;
-  };
-
   uint16_t get_pattern_width() const
   {
-    return m_pattern_width;
+    return m_pattern.m_pattern_width;
   }
 
   uint16_t get_pattern_height() const
   {
-    return m_pattern_height;
+    return m_pattern.m_pattern_height;
   }
+
+  const BayerPattern& get_bayer_pattern() const { return m_pattern; }
+
+  void set_bayer_pattern(const BayerPattern& pattern);
 
   std::string dump(Indent&) const override;
 
@@ -377,9 +375,7 @@ public:
 protected:
   Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
 
-  uint16_t m_pattern_width = 0;
-  uint16_t m_pattern_height = 0;
-  std::vector<PatternComponent> m_components;
+  BayerPattern m_pattern;
 };
 
 
