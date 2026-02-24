@@ -63,6 +63,8 @@ set(libheif_sources
         region.h
         brands.cc
         brands.h
+        id_creator.cc
+        id_creator.h
         text.cc
         text.h
         api_structs.h

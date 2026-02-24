@@ -114,6 +114,7 @@ bool force_enc_jpeg2000 = false;
 bool force_enc_htj2k = false;
 bool use_tiling = false;
 bool encode_sequence = false;
+bool option_unif = false;
 bool use_video_handler = false;
 std::string option_mime_item_type;
 std::string option_mime_item_file;
@@ -200,6 +201,7 @@ const int OPTION_USE_HEVC_COMPRESSION = 1037;
 const int OPTION_SET_OMAF_IMAGE_PROJECTION = 1038;
 #endif
 const int OPTION_ADD_COMPATIBLE_BRAND = 1039;
+const int OPTION_UNIF = 1040;
 
 static option long_options[] = {
     {(char* const) "help",                    no_argument,       0,              'h'},
@@ -272,6 +274,7 @@ static option long_options[] = {
     {(char* const) "omaf-image-projection",       required_argument,       nullptr, OPTION_SET_OMAF_IMAGE_PROJECTION},
 #endif
     {(char* const) "add-compatible-brand",        required_argument,       nullptr, OPTION_ADD_COMPATIBLE_BRAND},
+    {(char* const) "unif",                      no_argument,             nullptr, OPTION_UNIF},
     {0, 0,                                                           0,  0}
 };
 
@@ -329,6 +332,7 @@ void show_help(const char* argv0)
             << "      --mime-item-file FILE         use the specified FILE as the data to put into the mime item (experimental)\n"
 #endif
             << "      --add-compatible-brand BRAND  add a compatible brand to the output file (4 characters)\n"
+            << "      --unif                        use unified ID namespace (adds 'unif' compatible brand)\n"
             << "\n"
             << "codecs:\n"
             << "  -A, --avif                     encode as AVIF (not needed if output filename with .avif suffix is provided)\n"
@@ -1641,6 +1645,9 @@ int main(int argc, char** argv)
         }
         additional_compatible_brands.push_back(heif_fourcc_to_brand(optarg));
         break;
+      case OPTION_UNIF:
+        option_unif = true;
+        break;
     }
   }
 
@@ -1742,6 +1749,10 @@ int main(int argc, char** argv)
   if (!context) {
     std::cerr << "Could not create context object\n";
     return 1;
+  }
+
+  if (option_unif) {
+    heif_context_set_unif(context.get(), 1);
   }
 
 

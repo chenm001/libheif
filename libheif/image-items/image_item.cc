@@ -387,7 +387,11 @@ Error ImageItem::encode_to_item(HeifContext* ctx,
 
   Encoder::CodedImageData& codedImage = *codingResult;
 
-  auto infe_box = ctx->get_heif_file()->add_new_infe_box(get_infe_type());
+  auto infe_result = ctx->get_heif_file()->add_new_infe_box(get_infe_type());
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   heif_item_id image_id = infe_box->get_item_ID();
   set_id(image_id);
 
