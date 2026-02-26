@@ -81,7 +81,7 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
 
   uint16_t box_index = 0;
   for (const auto& comp : m_components) {
-    m_cmpd->add_component({comp.component_type});
+    m_cmpd->add_component({static_cast<uint16_t>(comp.component_type)});
 
     uint8_t component_align_size = 0;
 
