@@ -131,7 +131,7 @@ Error UncompressedImageCodec::get_heif_chroma_uncompressed(const std::shared_ptr
   if (componentSet == (1 << heif_uncompressed_component_type_filter_array)) {
     // TODO - we should look up the components
     *out_chroma = heif_chroma_monochrome;
-    *out_colourspace = heif_colorspace_monochrome;
+    *out_colourspace = heif_colorspace_filter_array;
   }
 
   // TODO: more combinations

@@ -321,7 +321,7 @@ Result<Encoder::CodedImageData> ImageItem::encode_to_bitstream_and_boxes(const s
   // --- write PIXI property
 
   std::shared_ptr<Box_pixi> pixi = std::make_shared<Box_pixi>();
-  if (colorspace == heif_colorspace_monochrome && image->has_channel(heif_channel_filter_array)) {
+  if (colorspace == heif_colorspace_filter_array) {
     // Skip pixi for filter array images — bit depth info is in uncC
   }
   else if (colorspace == heif_colorspace_monochrome) {

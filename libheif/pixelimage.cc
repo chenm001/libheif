@@ -388,6 +388,9 @@ std::vector<heif_chroma> get_valid_chroma_values_for_colorspace(heif_colorspace 
     case heif_colorspace_nonvisual:
       return {heif_chroma_undefined};
 
+    case heif_colorspace_filter_array:
+      return {heif_chroma_monochrome};
+
     default:
       return {};
   }

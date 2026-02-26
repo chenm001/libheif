@@ -455,7 +455,19 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
   auto img = *createImgResult;
 
   if (properties.cpat) {
-    img->set_bayer_pattern(properties.cpat->get_pattern());
+    // Resolve cpat component indices to actual component types from cmpd.
+    BayerPattern pattern = properties.cpat->get_pattern();
+    const auto& cmpd_components = cmpd->get_components();
+    for (auto& pixel : pattern.pixels) {
+      uint16_t idx = pixel.component_type;
+      if (idx >= cmpd_components.size()) {
+        return Error(heif_error_Invalid_input,
+                     heif_suberror_Invalid_parameter_value,
+                     "cpat component index out of range");
+      }
+      pixel.component_type = cmpd_components[idx].component_type;
+    }
+    img->set_bayer_pattern(pattern);
   }
 
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);

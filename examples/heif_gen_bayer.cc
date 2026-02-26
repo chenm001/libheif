@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 
   heif_image* bayer_img = nullptr;
   err = heif_image_create(width, height,
-                          heif_colorspace_monochrome,
+                          heif_colorspace_filter_array,
                           heif_chroma_monochrome,
                           &bayer_img);
   if (err.code != heif_error_Ok) {
