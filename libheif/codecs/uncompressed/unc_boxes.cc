@@ -1122,3 +1122,127 @@ Error Box_splz::write(StreamWriter& writer) const
 
   return Error::Ok;
 }
+
+
+Error Box_sbpm::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("sbpm");
+  }
+
+  uint32_t component_count = range.read32();
+
+  if (limits->max_components && component_count > limits->max_components) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            "sbpm component_count exceeds security limit."};
+  }
+
+  m_map.component_indices.resize(component_count);
+  for (uint32_t i = 0; i < component_count; i++) {
+    m_map.component_indices[i] = range.read32();
+  }
+
+  uint8_t flags = range.read8();
+  m_map.correction_applied = !!(flags & 0x80);
+
+  uint32_t num_bad_rows = range.read32();
+  uint32_t num_bad_cols = range.read32();
+  uint32_t num_bad_pixels = range.read32();
+
+  // Security check: limit total number of entries
+  uint64_t total_entries = static_cast<uint64_t>(num_bad_rows) + num_bad_cols + num_bad_pixels;
+  if (limits->max_bad_pixels && total_entries > limits->max_bad_pixels) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            "sbpm total bad pixel entries exceed security limit."};
+  }
+
+  m_map.bad_rows.resize(num_bad_rows);
+  for (uint32_t i = 0; i < num_bad_rows; i++) {
+    m_map.bad_rows[i] = range.read32();
+  }
+
+  m_map.bad_columns.resize(num_bad_cols);
+  for (uint32_t i = 0; i < num_bad_cols; i++) {
+    m_map.bad_columns[i] = range.read32();
+  }
+
+  m_map.bad_pixels.resize(num_bad_pixels);
+  for (uint32_t i = 0; i < num_bad_pixels; i++) {
+    m_map.bad_pixels[i].row = range.read32();
+    m_map.bad_pixels[i].column = range.read32();
+  }
+
+  return range.get_error();
+}
+
+
+std::string Box_sbpm::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+
+  sstr << FullBox::dump(indent);
+
+  sstr << indent << "component_count: " << m_map.component_indices.size() << "\n";
+  for (size_t i = 0; i < m_map.component_indices.size(); i++) {
+    sstr << indent << "  component_index[" << i << "]: " << m_map.component_indices[i] << "\n";
+  }
+
+  sstr << indent << "correction_applied: " << m_map.correction_applied << "\n";
+
+  sstr << indent << "num_bad_rows: " << m_map.bad_rows.size() << "\n";
+  for (size_t i = 0; i < m_map.bad_rows.size(); i++) {
+    sstr << indent << "  bad_row[" << i << "]: " << m_map.bad_rows[i] << "\n";
+  }
+
+  sstr << indent << "num_bad_columns: " << m_map.bad_columns.size() << "\n";
+  for (size_t i = 0; i < m_map.bad_columns.size(); i++) {
+    sstr << indent << "  bad_column[" << i << "]: " << m_map.bad_columns[i] << "\n";
+  }
+
+  sstr << indent << "num_bad_pixels: " << m_map.bad_pixels.size() << "\n";
+  for (size_t i = 0; i < m_map.bad_pixels.size(); i++) {
+    sstr << indent << "  bad_pixel[" << i << "]: row=" << m_map.bad_pixels[i].row
+         << ", column=" << m_map.bad_pixels[i].column << "\n";
+  }
+
+  return sstr.str();
+}
+
+
+Error Box_sbpm::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write32(static_cast<uint32_t>(m_map.component_indices.size()));
+  for (uint32_t idx : m_map.component_indices) {
+    writer.write32(idx);
+  }
+
+  uint8_t flags = m_map.correction_applied ? 0x80 : 0;
+  writer.write8(flags);
+
+  writer.write32(static_cast<uint32_t>(m_map.bad_rows.size()));
+  writer.write32(static_cast<uint32_t>(m_map.bad_columns.size()));
+  writer.write32(static_cast<uint32_t>(m_map.bad_pixels.size()));
+
+  for (uint32_t row : m_map.bad_rows) {
+    writer.write32(row);
+  }
+
+  for (uint32_t col : m_map.bad_columns) {
+    writer.write32(col);
+  }
+
+  for (const auto& pixel : m_map.bad_pixels) {
+    writer.write32(pixel.row);
+    writer.write32(pixel.column);
+  }
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}

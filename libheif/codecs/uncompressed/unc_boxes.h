@@ -403,6 +403,33 @@ protected:
 };
 
 
+/**
+ * Sensor bad pixels map box (sbpm).
+ *
+ * Identifies bad pixels on a sensor for which at least one component
+ * value is corrupted. Supports bad rows, bad columns, and individual
+ * bad pixel coordinates.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.7.
+ */
+class Box_sbpm : public FullBox
+{
+public:
+  Box_sbpm() { set_short_type(fourcc("sbpm")); }
+
+  const SensorBadPixelsMap& get_bad_pixels_map() const { return m_map; }
+  void set_bad_pixels_map(const SensorBadPixelsMap& map) { m_map = map; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  SensorBadPixelsMap m_map;
+};
+
+
 void fill_uncC_and_cmpd_from_profile(const std::shared_ptr<Box_uncC>& uncC,
                                      std::shared_ptr<Box_cmpd>& cmpd);
 

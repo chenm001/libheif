@@ -152,6 +152,55 @@ int heif_image_get_polarization_pattern_index_for_component(const heif_image*,
                                                             uint32_t component_index);
 
 
+// --- Sensor bad pixels map (ISO 23001-17, Section 6.1.7)
+
+struct heif_bad_pixel { uint32_t row; uint32_t column; };
+
+// Add a sensor bad pixels map to an image.
+// component_indices: array of component indices this map applies to (may be NULL if num_component_indices == 0,
+//                    meaning the map applies to all components).
+// Multiple maps can be added (one per distinct component group with different defects).
+LIBHEIF_API
+heif_error heif_image_add_sensor_bad_pixels_map(heif_image*,
+                                                 uint32_t num_component_indices,
+                                                 const uint32_t* component_indices,
+                                                 int correction_applied,
+                                                 uint32_t num_bad_rows,
+                                                 const uint32_t* bad_rows,
+                                                 uint32_t num_bad_columns,
+                                                 const uint32_t* bad_columns,
+                                                 uint32_t num_bad_pixels,
+                                                 const struct heif_bad_pixel* bad_pixels);
+
+// Returns the number of sensor bad pixels maps on this image (0 if none).
+LIBHEIF_API
+int heif_image_get_number_of_sensor_bad_pixels_maps(const heif_image*);
+
+// Get the sizes of a sensor bad pixels map (to allocate arrays for the data query).
+LIBHEIF_API
+heif_error heif_image_get_sensor_bad_pixels_map_info(const heif_image*,
+                                                      int map_index,
+                                                      uint32_t* out_num_component_indices,
+                                                      int* out_correction_applied,
+                                                      uint32_t* out_num_bad_rows,
+                                                      uint32_t* out_num_bad_columns,
+                                                      uint32_t* out_num_bad_pixels);
+
+// Get the actual data of a sensor bad pixels map.
+// Caller must provide pre-allocated arrays:
+//   out_component_indices: num_component_indices entries (may be NULL if num_component_indices == 0)
+//   out_bad_rows: num_bad_rows entries (may be NULL if num_bad_rows == 0)
+//   out_bad_columns: num_bad_columns entries (may be NULL if num_bad_columns == 0)
+//   out_bad_pixels: num_bad_pixels entries (may be NULL if num_bad_pixels == 0)
+LIBHEIF_API
+heif_error heif_image_get_sensor_bad_pixels_map_data(const heif_image*,
+                                                      int map_index,
+                                                      uint32_t* out_component_indices,
+                                                      uint32_t* out_bad_rows,
+                                                      uint32_t* out_bad_columns,
+                                                      struct heif_bad_pixel* out_bad_pixels);
+
+
 // --- 'unci' images
 
 // This is similar to heif_metadata_compression. We should try to keep the integers compatible, but each enum will just

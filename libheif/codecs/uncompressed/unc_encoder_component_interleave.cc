@@ -151,6 +151,14 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
       m_splz.push_back(splz);
     }
   }
+
+  if (image->has_sensor_bad_pixels_maps()) {
+    for (const auto& bpm : image->get_sensor_bad_pixels_maps()) {
+      auto sbpm = std::make_shared<Box_sbpm>();
+      sbpm->set_bad_pixels_map(bpm);
+      m_sbpm.push_back(sbpm);
+    }
+  }
 }
 
 

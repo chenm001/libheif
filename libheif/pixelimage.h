@@ -57,6 +57,16 @@ struct PolarizationPattern
                                             // 0xFFFFFFFF bit-pattern (NaN) = no polarization filter
 };
 
+struct SensorBadPixelsMap
+{
+  std::vector<uint32_t> component_indices;  // empty = applies to all components
+  bool correction_applied = false;
+  std::vector<uint32_t> bad_rows;
+  std::vector<uint32_t> bad_columns;
+  struct BadPixel { uint32_t row; uint32_t column; };
+  std::vector<BadPixel> bad_pixels;
+};
+
 heif_chroma chroma_from_subsampling(int h, int v);
 
 uint32_t chroma_width(uint32_t w, heif_chroma chroma);
@@ -219,6 +229,17 @@ public:
   virtual void add_polarization_pattern(const PolarizationPattern& p) { m_polarization_patterns.push_back(p); }
 
 
+  // --- sensor bad pixels map
+
+  bool has_sensor_bad_pixels_maps() const { return !m_sensor_bad_pixels_maps.empty(); }
+
+  const std::vector<SensorBadPixelsMap>& get_sensor_bad_pixels_maps() const { return m_sensor_bad_pixels_maps; }
+
+  virtual void set_sensor_bad_pixels_maps(const std::vector<SensorBadPixelsMap>& m) { m_sensor_bad_pixels_maps = m; }
+
+  virtual void add_sensor_bad_pixels_map(const SensorBadPixelsMap& m) { m_sensor_bad_pixels_maps.push_back(m); }
+
+
 #if HEIF_WITH_OMAF
   bool has_omaf_image_projection() const {
     return (m_omaf_image_projection != heif_omaf_image_projection_flat);
@@ -250,6 +271,8 @@ private:
   std::optional<BayerPattern> m_bayer_pattern;
 
   std::vector<PolarizationPattern> m_polarization_patterns;
+
+  std::vector<SensorBadPixelsMap> m_sensor_bad_pixels_maps;
 
 #if HEIF_WITH_OMAF
   heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;

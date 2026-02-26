@@ -474,6 +474,10 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
     img->add_polarization_pattern(splz_box->get_pattern());
   }
 
+  for (const auto& sbpm_box : properties.sbpm) {
+    img->add_sensor_bad_pixels_map(sbpm_box->get_bad_pixels_map());
+  }
+
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);
   if (!decoderResult) {
     return decoderResult.error();

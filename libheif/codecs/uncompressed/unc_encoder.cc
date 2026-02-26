@@ -168,6 +168,10 @@ Result<Encoder::CodedImageData> unc_encoder::encode_static(const std::shared_ptr
     codedImageData.properties.push_back(splz);
   }
 
+  for (const auto& sbpm : m_sbpm) {
+    codedImageData.properties.push_back(sbpm);
+  }
+
 
   // --- encode image
 
