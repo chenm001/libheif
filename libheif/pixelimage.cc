@@ -1880,15 +1880,14 @@ Error HeifPixelImage::scale_nearest_neighbor(std::shared_ptr<HeifPixelImage>& ou
 
 void HeifPixelImage::forward_all_metadata_from(const std::shared_ptr<const HeifPixelImage>& src_image)
 {
+  // --- pass the color profiles to the new image
+
   set_color_profile_nclx(src_image->get_color_profile_nclx());
   set_color_profile_icc(src_image->get_color_profile_icc());
 
-  if (src_image->has_nonsquare_pixel_ratio()) {
-    uint32_t h,v;
-    src_image->get_pixel_ratio(&h,&v);
-    set_pixel_ratio(h,v);
-  }
+  set_premultiplied_alpha(src_image->is_premultiplied_alpha());
 
+  // pass through HDR information
   if (src_image->has_clli()) {
     set_clli(src_image->get_clli());
   }
@@ -1897,9 +1896,25 @@ void HeifPixelImage::forward_all_metadata_from(const std::shared_ptr<const HeifP
     set_mdcv(src_image->get_mdcv());
   }
 
-  set_premultiplied_alpha(src_image->is_premultiplied_alpha());
+  if (src_image->has_nonsquare_pixel_ratio()) {
+    uint32_t h,v;
+    src_image->get_pixel_ratio(&h,&v);
+    set_pixel_ratio(h,v);
+  }
 
-  // TODO: TAI timestamp and contentID (once we merge that branch)
+  if (src_image->has_gimi_sample_content_id()) {
+    set_gimi_sample_content_id(src_image->get_gimi_sample_content_id());
+  }
+
+  if (auto* tai = src_image->get_tai_timestamp()) {
+    set_tai_timestamp(tai);
+  }
+
+  set_sample_duration(src_image->get_sample_duration());
+
+#if HEIF_WITH_OMAF
+  set_omaf_image_projection(src_image->get_omaf_image_projection());
+#endif
 
   // TODO: should we also forward the warnings? It might be better to do that in ImageItem_Grid.
 
