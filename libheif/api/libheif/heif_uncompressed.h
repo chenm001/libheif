@@ -36,7 +36,7 @@ extern "C" {
 
 // --- ISO 23001-17 component types (Table 1)
 
-enum heif_uncompressed_component_type
+typedef enum heif_uncompressed_component_type
 {
   heif_uncompressed_component_type_monochrome = 0,
   heif_uncompressed_component_type_Y = 1,
@@ -55,16 +55,16 @@ enum heif_uncompressed_component_type
   heif_uncompressed_component_type_magenta = 14,
   heif_uncompressed_component_type_yellow = 15,
   heif_uncompressed_component_type_key_black = 16
-};
+} heif_uncompressed_component_type;
 
 
 // --- Bayer / filter array pattern
 
-struct heif_bayer_pattern_pixel
+typedef struct heif_bayer_pattern_pixel
 {
   uint16_t component_type;  // one of heif_uncompressed_component_type values
   float component_gain;
-};
+} heif_bayer_pattern_pixel;
 
 // Set a Bayer / filter array pattern on an image.
 // The pattern is a 2D array of component types with dimensions pattern_width x pattern_height.
@@ -76,7 +76,7 @@ LIBHEIF_API
 heif_error heif_image_set_bayer_pattern(heif_image*,
                                         uint16_t pattern_width,
                                         uint16_t pattern_height,
-                                        const struct heif_bayer_pattern_pixel* patternPixels);
+                                        const heif_bayer_pattern_pixel* patternPixels);
 
 // Returns whether the image has a Bayer / filter array pattern.
 // If the image has a pattern, out_pattern_width and out_pattern_height are set.
@@ -92,7 +92,7 @@ int heif_image_has_bayer_pattern(const heif_image*,
 // Returns heif_error_Ok on success, or an error if no pattern is set.
 LIBHEIF_API
 heif_error heif_image_get_bayer_pattern(const heif_image*,
-                                        struct heif_bayer_pattern_pixel* out_patternPixels);
+                                        heif_bayer_pattern_pixel* out_patternPixels);
 
 // --- 'unci' images
 
