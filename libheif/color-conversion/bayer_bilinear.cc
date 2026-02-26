@@ -22,6 +22,7 @@
 #include <libheif/heif_uncompressed.h>
 #include <array>
 #include <cassert>
+#include <utility>
 
 
 std::vector<ColorStateWithCost>
