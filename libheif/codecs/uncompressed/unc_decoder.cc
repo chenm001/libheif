@@ -470,6 +470,10 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
     img->set_bayer_pattern(pattern);
   }
 
+  for (const auto& splz_box : properties.splz) {
+    img->add_polarization_pattern(splz_box->get_pattern());
+  }
+
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);
   if (!decoderResult) {
     return decoderResult.error();

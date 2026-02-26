@@ -164,6 +164,10 @@ Result<Encoder::CodedImageData> unc_encoder::encode_static(const std::shared_ptr
     codedImageData.properties.push_back(m_cpat);
   }
 
+  for (const auto& splz : m_splz) {
+    codedImageData.properties.push_back(splz);
+  }
+
 
   // --- encode image
 

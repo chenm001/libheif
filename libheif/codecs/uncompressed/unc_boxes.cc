@@ -1023,3 +1023,102 @@ Error Box_cpat::write(StreamWriter& writer) const
 
   return Error::Ok;
 }
+
+
+Error Box_splz::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("splz");
+  }
+
+  uint32_t component_count = range.read32();
+  m_pattern.component_indices.resize(component_count);
+  for (uint32_t i = 0; i < component_count; i++) {
+    m_pattern.component_indices[i] = range.read32();
+  }
+
+  m_pattern.pattern_width = range.read16();
+  m_pattern.pattern_height = range.read16();
+
+  if (m_pattern.pattern_width == 0 || m_pattern.pattern_height == 0) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Invalid_parameter_value,
+            "Zero polarization pattern size."};
+  }
+
+  auto max_pattern_size = limits->max_bayer_pattern_pixels;
+  if (max_pattern_size && m_pattern.pattern_height > max_pattern_size / m_pattern.pattern_width) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            "Maximum polarization pattern size exceeded."};
+  }
+
+  size_t num_pixels = size_t{m_pattern.pattern_width} * m_pattern.pattern_height;
+  m_pattern.polarization_angles.resize(num_pixels);
+
+  for (size_t i = 0; i < num_pixels; i++) {
+    m_pattern.polarization_angles[i] = range.read_float32();
+  }
+
+  return range.get_error();
+}
+
+
+std::string Box_splz::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+
+  sstr << FullBox::dump(indent);
+
+  sstr << indent << "component_count: " << m_pattern.component_indices.size() << "\n";
+  for (size_t i = 0; i < m_pattern.component_indices.size(); i++) {
+    sstr << indent << "  component_index[" << i << "]: " << m_pattern.component_indices[i] << "\n";
+  }
+
+  sstr << indent << "pattern_width: " << m_pattern.pattern_width << "\n";
+  sstr << indent << "pattern_height: " << m_pattern.pattern_height << "\n";
+
+  for (uint16_t y = 0; y < m_pattern.pattern_height; y++) {
+    for (uint16_t x = 0; x < m_pattern.pattern_width; x++) {
+      float angle = m_pattern.polarization_angles[y * m_pattern.pattern_width + x];
+      if (heif_polarization_angle_is_no_filter(angle)) {
+        sstr << indent << "  [" << x << "," << y << "]: no filter\n";
+      }
+      else {
+        sstr << indent << "  [" << x << "," << y << "]: " << angle << " degrees\n";
+      }
+    }
+  }
+
+  return sstr.str();
+}
+
+
+Error Box_splz::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  if (m_pattern.pattern_width * size_t{m_pattern.pattern_height} != m_pattern.polarization_angles.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "incorrect number of polarization pattern angles"};
+  }
+
+  writer.write32(static_cast<uint32_t>(m_pattern.component_indices.size()));
+  for (uint32_t idx : m_pattern.component_indices) {
+    writer.write32(idx);
+  }
+
+  writer.write16(m_pattern.pattern_width);
+  writer.write16(m_pattern.pattern_height);
+
+  for (float angle : m_pattern.polarization_angles) {
+    writer.write_float32(angle);
+  }
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}

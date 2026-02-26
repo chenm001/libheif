@@ -374,6 +374,35 @@ protected:
 };
 
 
+/**
+ * Polarization pattern definition box (splz).
+ *
+ * Describes the polarization filter array pattern on an image sensor.
+ * Multiple splz boxes can exist (one per set of components with
+ * different polarization filters).
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.5.
+ */
+class Box_splz : public FullBox
+{
+public:
+  Box_splz() { set_short_type(fourcc("splz")); }
+
+  const PolarizationPattern& get_pattern() const { return m_pattern; }
+
+  void set_pattern(const PolarizationPattern& pattern) { m_pattern = pattern; }
+
+  std::string dump(Indent&) const override;
+
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  PolarizationPattern m_pattern;
+};
+
+
 void fill_uncC_and_cmpd_from_profile(const std::shared_ptr<Box_uncC>& uncC,
                                      std::shared_ptr<Box_cmpd>& cmpd);
 

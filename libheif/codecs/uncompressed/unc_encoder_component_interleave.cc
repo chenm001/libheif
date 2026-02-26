@@ -143,6 +143,14 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
     m_cpat = std::make_shared<Box_cpat>();
     m_cpat->set_pattern(cpat_pattern);
   }
+
+  if (image->has_polarization_patterns()) {
+    for (const auto& pol : image->get_polarization_patterns()) {
+      auto splz = std::make_shared<Box_splz>();
+      splz->set_pattern(pol);
+      m_splz.push_back(splz);
+    }
+  }
 }
 
 
