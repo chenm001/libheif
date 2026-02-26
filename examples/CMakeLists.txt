@@ -75,7 +75,7 @@ if (WITH_HEADER_COMPRESSION)
 endif ()
 
 
-if (PNG_FOUND)
+if (BUILD_DEVELOPMENT_TOOLS AND PNG_FOUND)
     add_executable(heif-gen-bayer
             heif_gen_bayer.cc)
     target_link_libraries(heif-gen-bayer PRIVATE heif heifio)
