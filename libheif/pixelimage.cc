@@ -96,29 +96,29 @@ uint32_t channel_height(uint32_t h, heif_chroma chroma, heif_channel channel)
 heif_channel map_uncompressed_component_to_channel(uint16_t component_type)
 {
   switch (component_type) {
-    case component_type_monochrome:
-    case component_type_Y:
+    case heif_uncompressed_component_type_monochrome:
+    case heif_uncompressed_component_type_Y:
       return heif_channel_Y;
-    case component_type_Cb:
+    case heif_uncompressed_component_type_Cb:
       return heif_channel_Cb;
-    case component_type_Cr:
+    case heif_uncompressed_component_type_Cr:
       return heif_channel_Cr;
-    case component_type_red:
+    case heif_uncompressed_component_type_red:
       return heif_channel_R;
-    case component_type_green:
+    case heif_uncompressed_component_type_green:
       return heif_channel_G;
-    case component_type_blue:
+    case heif_uncompressed_component_type_blue:
       return heif_channel_B;
-    case component_type_alpha:
+    case heif_uncompressed_component_type_alpha:
       return heif_channel_Alpha;
-    case component_type_filter_array:
+    case heif_uncompressed_component_type_filter_array:
       return heif_channel_filter_array;
-    case component_type_depth:
+    case heif_uncompressed_component_type_depth:
       return heif_channel_depth;
-    case component_type_disparity:
+    case heif_uncompressed_component_type_disparity:
       return heif_channel_disparity;
 
-    case component_type_padded:
+    case heif_uncompressed_component_type_padded:
     default:
       return heif_channel_unknown;
   }
@@ -767,17 +767,17 @@ uint32_t HeifPixelImage::get_primary_component() const
     }
 
     switch (m_planes[idx].m_component_type) {
-      case component_type_Y:
-      case component_type_monochrome:
-      case component_type_red:
-      case component_type_green:
-      case component_type_blue:
-      case component_type_cyan:
-      case component_type_magenta:
-      case component_type_yellow:
-      case component_type_key_black:
-      case component_type_filter_array:
-      case component_type_palette:
+      case heif_uncompressed_component_type_Y:
+      case heif_uncompressed_component_type_monochrome:
+      case heif_uncompressed_component_type_red:
+      case heif_uncompressed_component_type_green:
+      case heif_uncompressed_component_type_blue:
+      case heif_uncompressed_component_type_cyan:
+      case heif_uncompressed_component_type_magenta:
+      case heif_uncompressed_component_type_yellow:
+      case heif_uncompressed_component_type_key_black:
+      case heif_uncompressed_component_type_filter_array:
+      case heif_uncompressed_component_type_palette:
         return idx;
 
       default:

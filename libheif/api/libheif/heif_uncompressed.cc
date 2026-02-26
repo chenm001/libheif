@@ -21,11 +21,88 @@
 #include "heif_uncompressed.h"
 #include "context.h"
 #include "api_structs.h"
+#include "pixelimage.h"
 #include "image-items/unc_image.h"
 
 #include <array>
 #include <memory>
 #include <algorithm>
+
+
+heif_error heif_image_set_bayer_pattern(heif_image* image,
+                                        uint16_t pattern_width,
+                                        uint16_t pattern_height,
+                                        const struct heif_bayer_pattern_pixel* patternPixels)
+{
+  if (image == nullptr || patternPixels == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (pattern_width == 0 || pattern_height == 0) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Bayer pattern dimensions must be non-zero."};
+  }
+
+  BayerPattern pattern;
+  pattern.pattern_width = pattern_width;
+  pattern.pattern_height = pattern_height;
+
+  size_t num_pixels = size_t{pattern_width} * pattern_height;
+  pattern.pixels.assign(patternPixels, patternPixels + num_pixels);
+
+  image->image->set_bayer_pattern(pattern);
+
+  return heif_error_success;
+}
+
+
+int heif_image_has_bayer_pattern(const heif_image* image,
+                                 uint16_t* out_pattern_width,
+                                 uint16_t* out_pattern_height)
+{
+  if (image == nullptr || !image->image->has_bayer_pattern()) {
+    if (out_pattern_width) {
+      *out_pattern_width = 0;
+    }
+    if (out_pattern_height) {
+      *out_pattern_height = 0;
+    }
+    return 0;
+  }
+
+  const BayerPattern& pattern = image->image->get_bayer_pattern();
+
+  if (out_pattern_width) {
+    *out_pattern_width = pattern.pattern_width;
+  }
+  if (out_pattern_height) {
+    *out_pattern_height = pattern.pattern_height;
+  }
+
+  return 1;
+}
+
+
+heif_error heif_image_get_bayer_pattern(const heif_image* image,
+                                        struct heif_bayer_pattern_pixel* out_patternPixels)
+{
+  if (image == nullptr || out_patternPixels == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (!image->image->has_bayer_pattern()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Image does not have a Bayer pattern."};
+  }
+
+  const BayerPattern& pattern = image->image->get_bayer_pattern();
+  size_t num_pixels = size_t{pattern.pattern_width} * pattern.pattern_height;
+  std::copy(pattern.pixels.begin(), pattern.pixels.begin() + num_pixels, out_patternPixels);
+
+  return heif_error_success;
+}
 
 
 heif_unci_image_parameters* heif_unci_image_parameters_alloc()

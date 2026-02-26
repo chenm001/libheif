@@ -24,6 +24,7 @@
 
 #include "box.h"
 #include "bitstream.h"
+#include "pixelimage.h"
 #include "unc_types.h"
 #include "sequences/seq_boxes.h"
 
@@ -354,19 +355,13 @@ public:
     set_short_type(fourcc("cpat"));
   }
 
-  uint16_t get_pattern_width() const
-  {
-    return m_pattern.m_pattern_width;
-  }
+  uint16_t get_pattern_width() const { return m_pattern.pattern_width; }
 
-  uint16_t get_pattern_height() const
-  {
-    return m_pattern.m_pattern_height;
-  }
+  uint16_t get_pattern_height() const { return m_pattern.pattern_height; }
 
-  const BayerPattern& get_bayer_pattern() const { return m_pattern; }
+  const BayerPattern& get_pattern() const { return m_pattern; }
 
-  void set_bayer_pattern(const BayerPattern& pattern);
+  void set_pattern(const BayerPattern& pattern) { m_pattern = pattern; }
 
   std::string dump(Indent&) const override;
 

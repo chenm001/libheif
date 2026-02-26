@@ -34,6 +34,66 @@ extern "C" {
  *        See heif_metadata_compression for more information.
  */
 
+// --- ISO 23001-17 component types (Table 1)
+
+enum heif_uncompressed_component_type
+{
+  heif_uncompressed_component_type_monochrome = 0,
+  heif_uncompressed_component_type_Y = 1,
+  heif_uncompressed_component_type_Cb = 2,
+  heif_uncompressed_component_type_Cr = 3,
+  heif_uncompressed_component_type_red = 4,
+  heif_uncompressed_component_type_green = 5,
+  heif_uncompressed_component_type_blue = 6,
+  heif_uncompressed_component_type_alpha = 7,
+  heif_uncompressed_component_type_depth = 8,
+  heif_uncompressed_component_type_disparity = 9,
+  heif_uncompressed_component_type_palette = 10,
+  heif_uncompressed_component_type_filter_array = 11,
+  heif_uncompressed_component_type_padded = 12,
+  heif_uncompressed_component_type_cyan = 13,
+  heif_uncompressed_component_type_magenta = 14,
+  heif_uncompressed_component_type_yellow = 15,
+  heif_uncompressed_component_type_key_black = 16
+};
+
+
+// --- Bayer / filter array pattern
+
+struct heif_bayer_pattern_pixel
+{
+  uint16_t component_type;  // one of heif_uncompressed_component_type values
+  float component_gain;
+};
+
+// Set a Bayer / filter array pattern on an image.
+// The pattern is a 2D array of component types with dimensions pattern_width x pattern_height.
+// The number of entries in patternPixels must be pattern_width * pattern_height.
+// The component_type values correspond to the ISO 23001-17 component types
+// (e.g. heif_uncompressed_component_type_red=4, heif_uncompressed_component_type_green=5, heif_uncompressed_component_type_blue=6).
+// The encoder resolves these component types to cmpd indices when writing the cpat box.
+LIBHEIF_API
+heif_error heif_image_set_bayer_pattern(heif_image*,
+                                        uint16_t pattern_width,
+                                        uint16_t pattern_height,
+                                        const struct heif_bayer_pattern_pixel* patternPixels);
+
+// Returns whether the image has a Bayer / filter array pattern.
+// If the image has a pattern, out_pattern_width and out_pattern_height are set.
+// Either output pointer may be NULL if the caller does not need that value.
+LIBHEIF_API
+int heif_image_has_bayer_pattern(const heif_image*,
+                                 uint16_t* out_pattern_width,
+                                 uint16_t* out_pattern_height);
+
+// Get the Bayer / filter array pattern pixels.
+// The caller must provide an array large enough for pattern_width * pattern_height entries
+// (use heif_image_has_bayer_pattern() to query the dimensions first).
+// Returns heif_error_Ok on success, or an error if no pattern is set.
+LIBHEIF_API
+heif_error heif_image_get_bayer_pattern(const heif_image*,
+                                        struct heif_bayer_pattern_pixel* out_patternPixels);
+
 // --- 'unci' images
 
 // This is similar to heif_metadata_compression. We should try to keep the integers compatible, but each enum will just

@@ -31,6 +31,7 @@
 
 class Box_uncC;
 class Box_cmpd;
+class Box_cpat;
 class HeifPixelImage;
 
 heif_uncompressed_component_type heif_channel_to_component_type(heif_channel channel);
@@ -47,6 +48,7 @@ public:
 
   std::shared_ptr<Box_cmpd> get_cmpd() const { return m_cmpd; }
   std::shared_ptr<Box_uncC> get_uncC() const { return m_uncC; }
+  std::shared_ptr<Box_cpat> get_cpat() const { return m_cpat; }
 
 
   virtual uint64_t compute_tile_data_size_bytes(uint32_t tile_width, uint32_t tile_height) const = 0;
@@ -62,6 +64,7 @@ public:
 protected:
   std::shared_ptr<Box_cmpd> m_cmpd;
   std::shared_ptr<Box_uncC> m_uncC;
+  std::shared_ptr<Box_cpat> m_cpat;
 };
 
 

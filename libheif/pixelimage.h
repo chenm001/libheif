@@ -26,6 +26,7 @@
 #include "error.h"
 #include "nclx.h"
 #include <libheif/heif_experimental.h>
+#include <libheif/heif_uncompressed.h>
 #if HEIF_WITH_OMAF
 #include "omaf_boxes.h"
 #endif
@@ -34,12 +35,18 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <optional>
 #include <set>
 #include <utility>
 #include <cassert>
 #include <string>
 
-#include "codecs/uncompressed/unc_types.h"
+struct BayerPattern
+{
+  uint16_t pattern_width = 0;
+  uint16_t pattern_height = 0;
+  std::vector<heif_bayer_pattern_pixel> pixels;
+};
 
 heif_chroma chroma_from_subsampling(int h, int v);
 
@@ -182,6 +189,15 @@ public:
 
   std::string get_gimi_sample_content_id() const { assert(has_gimi_sample_content_id()); return *m_gimi_sample_content_id; }
 
+
+  // --- bayer pattern
+
+  bool has_bayer_pattern() const { return m_bayer_pattern.has_value(); }
+
+  const BayerPattern& get_bayer_pattern() const { assert(has_bayer_pattern()); return *m_bayer_pattern; }
+
+  virtual void set_bayer_pattern(const BayerPattern& pattern) { m_bayer_pattern = pattern; }
+
 #if HEIF_WITH_OMAF
   bool has_omaf_image_projection() const {
     return (m_omaf_image_projection != heif_omaf_image_projection_flat);
@@ -195,12 +211,6 @@ public:
     m_omaf_image_projection = projection;
   }
 #endif
-
-  void set_bayer_pattern(const BayerPattern& pattern) { m_bayer_pattern = pattern; }
-
-  bool has_bayer_pattern() const { return m_bayer_pattern.has_value(); }
-
-  const BayerPattern& get_bayer_pattern() const { assert(m_bayer_pattern); return *m_bayer_pattern; }
 
 private:
   bool m_premultiplied_alpha = false;
@@ -216,11 +226,11 @@ private:
 
   std::optional<std::string> m_gimi_sample_content_id;
 
+  std::optional<BayerPattern> m_bayer_pattern;
+
 #if HEIF_WITH_OMAF
   heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;
 #endif
-
-  std::optional<BayerPattern> m_bayer_pattern;
 
 protected:
   std::shared_ptr<Box_clli> get_clli_box() const;
