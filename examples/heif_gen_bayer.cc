@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -46,7 +47,7 @@
 
 struct PatternDefinition
 {
-  const char* name;
+  std::string name;
   uint16_t width;
   uint16_t height;
   std::vector<heif_bayer_pattern_pixel> cpat;
@@ -64,19 +65,6 @@ static const PatternDefinition patterns[] = {
       {heif_uncompressed_component_type_green, 1.0f},
       {heif_uncompressed_component_type_green, 1.0f},
       {heif_uncompressed_component_type_blue,  1.0f},
-    }
-  },
-
-  // GBRG
-  //   G B
-  //   R G
-  {
-    "gbrg", 2, 2,
-    {
-      {heif_uncompressed_component_type_green, 1.0f},
-      {heif_uncompressed_component_type_blue,  1.0f},
-      {heif_uncompressed_component_type_red,   1.0f},
-      {heif_uncompressed_component_type_green, 1.0f},
     }
   },
 
@@ -148,11 +136,36 @@ static constexpr int num_patterns = sizeof(patterns) / sizeof(patterns[0]);
 static const PatternDefinition* find_pattern(const char* name)
 {
   for (int i = 0; i < num_patterns; i++) {
-    if (strcasecmp(patterns[i].name, name) == 0) {
+    if (strcasecmp(patterns[i].name.c_str(), name) == 0) {
       return &patterns[i];
     }
   }
   return nullptr;
+}
+
+
+static std::optional<PatternDefinition> parse_pattern_string(const char* str)
+{
+  std::string s(str);
+  size_t len = s.size();
+  if (len != 4 && len != 16) {
+    return {};
+  }
+
+  uint16_t dim = (len == 4) ? 2 : 4;
+  std::vector<heif_bayer_pattern_pixel> cpat;
+  cpat.reserve(len);
+
+  for (char c : s) {
+    switch (std::tolower(c)) {
+      case 'r': cpat.push_back({heif_uncompressed_component_type_red, 1.0f}); break;
+      case 'g': cpat.push_back({heif_uncompressed_component_type_green, 1.0f}); break;
+      case 'b': cpat.push_back({heif_uncompressed_component_type_blue, 1.0f}); break;
+      default: return {};
+    }
+  }
+
+  return PatternDefinition{str, dim, dim, std::move(cpat)};
 }
 
 
@@ -229,6 +242,7 @@ static void print_usage()
               << (i == 0 ? "  [default]" : "")
               << "\n";
   }
+  std::cerr << "  Or specify a custom R/G/B string of length 4 (2x2) or 16 (4x4), e.g. -p BGGR\n";
 }
 
 
@@ -484,6 +498,7 @@ static int encode_sequence(const std::vector<std::string>& filenames,
 
 int main(int argc, char* argv[])
 {
+  PatternDefinition custom_pattern;
   const PatternDefinition* pat = &patterns[0]; // default: RGGB
   int output_bit_depth = 8;
   bool sequence_mode = false;
@@ -512,9 +527,16 @@ int main(int argc, char* argv[])
       case 'p':
         pat = find_pattern(optarg);
         if (!pat) {
-          std::cerr << "Unknown pattern: " << optarg << "\n";
-          print_usage();
-          return 1;
+          auto custom = parse_pattern_string(optarg);
+          if (custom) {
+            custom_pattern = std::move(*custom);
+            pat = &custom_pattern;
+          }
+          else {
+            std::cerr << "Unknown pattern: " << optarg << "\n";
+            print_usage();
+            return 1;
+          }
         }
         break;
 
