@@ -456,6 +456,31 @@ protected:
 };
 
 
+/**
+ * Chroma location box (cloc).
+ *
+ * Signals the chroma sample position for subsampled images.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.4.
+ */
+class Box_cloc : public FullBox
+{
+public:
+  Box_cloc() { set_short_type(fourcc("cloc")); }
+
+  uint8_t get_chroma_location() const { return m_chroma_location; }
+  void set_chroma_location(uint8_t loc) { m_chroma_location = loc; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  uint8_t m_chroma_location = 0;
+};
+
+
 void fill_uncC_and_cmpd_from_profile(const std::shared_ptr<Box_uncC>& uncC,
                                      std::shared_ptr<Box_cmpd>& cmpd);
 

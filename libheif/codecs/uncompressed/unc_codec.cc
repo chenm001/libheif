@@ -450,6 +450,7 @@ void UncompressedImageCodec::unci_properties::fill_from_image_item(const std::sh
   splz = image->get_all_properties<Box_splz>();
   sbpm = image->get_all_properties<Box_sbpm>();
   snuc = image->get_all_properties<Box_snuc>();
+  cloc = image->get_property<Box_cloc>();
 }
 
 

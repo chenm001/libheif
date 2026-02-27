@@ -482,6 +482,10 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
     img->add_sensor_nuc(snuc_box->get_nuc());
   }
 
+  if (properties.cloc) {
+    img->set_chroma_location(properties.cloc->get_chroma_location());
+  }
+
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);
   if (!decoderResult) {
     return decoderResult.error();

@@ -1347,3 +1347,61 @@ Error Box_snuc::write(StreamWriter& writer) const
 
   return Error::Ok;
 }
+
+
+Error Box_cloc::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("cloc");
+  }
+
+  m_chroma_location = range.read8();
+
+  if (m_chroma_location > 6) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Invalid_parameter_value,
+            "cloc chroma_location value out of range (must be 0-6)."};
+  }
+
+  return range.get_error();
+}
+
+
+std::string Box_cloc::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+
+  sstr << FullBox::dump(indent);
+
+  static const char* location_names[] = {
+    "h=0,   v=0.5",   // 0
+    "h=0.5, v=0.5",   // 1
+    "h=0,   v=0",     // 2
+    "h=0.5, v=0",     // 3
+    "h=0,   v=1",     // 4
+    "h=0.5, v=1",     // 5
+    "Cr:0,0 / Cb:1,0" // 6
+  };
+
+  sstr << indent << "chroma_location: " << static_cast<int>(m_chroma_location);
+  if (m_chroma_location <= 6) {
+    sstr << " (" << location_names[m_chroma_location] << ")";
+  }
+  sstr << "\n";
+
+  return sstr.str();
+}
+
+
+Error Box_cloc::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write8(m_chroma_location);
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}

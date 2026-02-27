@@ -167,6 +167,11 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
       m_snuc.push_back(snuc);
     }
   }
+
+  if (image->has_chroma_location()) {
+    m_cloc = std::make_shared<Box_cloc>();
+    m_cloc->set_chroma_location(image->get_chroma_location());
+  }
 }
 
 

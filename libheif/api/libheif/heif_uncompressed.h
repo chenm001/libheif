@@ -245,6 +245,38 @@ heif_error heif_image_get_sensor_nuc_data(const heif_image*,
                                            float* out_nuc_offsets);
 
 
+// --- Chroma sample location (ISO 23091-2 / ITU-T H.273 + ISO 23001-17)
+
+typedef enum heif_chroma420_sample_location {
+  // values 0-5 according to ISO 23091-2 / ITU-T H.273
+  heif_chroma420_sample_location_00_05 = 0,
+  heif_chroma420_sample_location_05_05 = 1,
+  heif_chroma420_sample_location_00_00 = 2,
+  heif_chroma420_sample_location_05_00 = 3,
+  heif_chroma420_sample_location_00_10 = 4,
+  heif_chroma420_sample_location_05_10 = 5,
+
+  // value 6 according to ISO 23001-17
+  heif_chroma420_sample_location_00_00_01_00 = 6
+} heif_chroma420_sample_location;
+
+
+// --- Chroma sample location (ISO 23001-17, Section 6.1.4)
+
+// Set the chroma sample location on an image.
+// chroma_location must be in the range 0-6 (see heif_chroma420_sample_location).
+LIBHEIF_API
+heif_error heif_image_set_chroma_location(heif_image*, uint8_t chroma_location);
+
+// Returns non-zero if the image has a chroma sample location set.
+LIBHEIF_API
+int heif_image_has_chroma_location(const heif_image*);
+
+// Returns the chroma sample location (0-6), or 0 if none is set.
+LIBHEIF_API
+uint8_t heif_image_get_chroma_location(const heif_image*);
+
+
 // --- 'unci' images
 
 // This is similar to heif_metadata_compression. We should try to keep the integers compatible, but each enum will just

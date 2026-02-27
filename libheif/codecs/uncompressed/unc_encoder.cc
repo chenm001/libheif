@@ -176,6 +176,10 @@ Result<Encoder::CodedImageData> unc_encoder::encode_static(const std::shared_ptr
     codedImageData.properties.push_back(snuc);
   }
 
+  if (m_cloc) {
+    codedImageData.properties.push_back(m_cloc);
+  }
+
 
   // --- encode image
 

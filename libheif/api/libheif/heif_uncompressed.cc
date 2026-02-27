@@ -519,6 +519,44 @@ heif_error heif_image_get_sensor_nuc_data(const heif_image* image,
 }
 
 
+heif_error heif_image_set_chroma_location(heif_image* image, uint8_t chroma_location)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (chroma_location > 6) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Chroma location must be in the range 0-6."};
+  }
+
+  image->image->set_chroma_location(chroma_location);
+
+  return heif_error_success;
+}
+
+
+int heif_image_has_chroma_location(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return image->image->has_chroma_location() ? 1 : 0;
+}
+
+
+uint8_t heif_image_get_chroma_location(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return image->image->get_chroma_location();
+}
+
+
 heif_unci_image_parameters* heif_unci_image_parameters_alloc()
 {
   auto* params = new heif_unci_image_parameters();

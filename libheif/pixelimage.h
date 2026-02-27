@@ -98,21 +98,6 @@ bool is_integer_multiple_of_chroma_size(uint32_t width,
 // Returns the list of valid heif_chroma values for a given colorspace.
 std::vector<heif_chroma> get_valid_chroma_values_for_colorspace(heif_colorspace colorspace);
 
-// TODO: move to public API when used
-enum heif_chroma420_sample_position {
-  // values 0-5 according to ISO 23091-2 / ITU-T H.273
-  heif_chroma420_sample_position_00_05 = 0,
-  heif_chroma420_sample_position_05_05 = 1,
-  heif_chroma420_sample_position_00_00 = 2,
-  heif_chroma420_sample_position_05_00 = 3,
-  heif_chroma420_sample_position_00_10 = 4,
-  heif_chroma420_sample_position_05_10 = 5,
-
-  // values 6 according to ISO 23001-17
-  heif_chroma420_sample_position_00_00_01_00 = 6
-};
-
-
 class ImageExtraData
 {
 public:
@@ -261,6 +246,15 @@ public:
   virtual void add_sensor_nuc(const SensorNonUniformityCorrection& n) { m_sensor_nuc.push_back(n); }
 
 
+  // --- chroma sample location (ISO 23001-17, Section 6.1.4)
+
+  bool has_chroma_location() const { return m_chroma_location.has_value(); }
+
+  uint8_t get_chroma_location() const { return m_chroma_location.value_or(0); }
+
+  virtual void set_chroma_location(uint8_t loc) { m_chroma_location = loc; }
+
+
 #if HEIF_WITH_OMAF
   bool has_omaf_image_projection() const {
     return (m_omaf_image_projection != heif_omaf_image_projection_flat);
@@ -296,6 +290,8 @@ private:
   std::vector<SensorBadPixelsMap> m_sensor_bad_pixels_maps;
 
   std::vector<SensorNonUniformityCorrection> m_sensor_nuc;
+
+  std::optional<uint8_t> m_chroma_location;
 
 #if HEIF_WITH_OMAF
   heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;
