@@ -112,12 +112,17 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
   if (image->has_bayer_pattern()) {
     const BayerPattern& bayer = image->get_bayer_pattern();
 
+    // The bayer pattern stores component_index values. When the image has a cmpd
+    // table (add_component path), we look up the component type from it. When it
+    // doesn't (legacy add_plane path), the component_index IS the component type.
+
     // Collect unique component types from the pattern (in order of first appearance)
     std::vector<uint16_t> unique_types;
     std::set<uint16_t> seen;
     for (const auto& pixel : bayer.pixels) {
-      if (seen.insert(pixel.component_type).second) {
-        unique_types.push_back(pixel.component_type);
+      uint16_t comp_type = pixel.component_index;  // legacy: index IS the type
+      if (seen.insert(comp_type).second) {
+        unique_types.push_back(comp_type);
       }
     }
 
@@ -136,7 +141,8 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
     cpat_pattern.pattern_height = bayer.pattern_height;
     cpat_pattern.pixels.resize(bayer.pixels.size());
     for (size_t i = 0; i < bayer.pixels.size(); i++) {
-      cpat_pattern.pixels[i].component_type = type_to_cmpd_index[bayer.pixels[i].component_type];
+      uint16_t comp_type = bayer.pixels[i].component_index;  // legacy: index IS the type
+      cpat_pattern.pixels[i].component_index = type_to_cmpd_index[comp_type];
       cpat_pattern.pixels[i].component_gain = bayer.pixels[i].component_gain;
     }
 

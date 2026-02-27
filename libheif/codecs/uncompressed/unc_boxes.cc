@@ -977,7 +977,7 @@ Error Box_cpat::parse(BitstreamRange& range, const heif_security_limits* limits)
 
   for (size_t i = 0; i < num_pixels; i++) {
     heif_bayer_pattern_pixel pixel{};
-    pixel.component_type = static_cast<uint16_t>(range.read32());
+    pixel.component_index = static_cast<uint16_t>(range.read32());
     pixel.component_gain = range.read_float32();
     m_pattern.pixels[i] = pixel;
   }
@@ -995,7 +995,7 @@ std::string Box_cpat::dump(Indent& indent) const
   sstr << indent << "pattern_height: " << get_pattern_height() << "\n";
 
   for (const auto& pixel : m_pattern.pixels) {
-    sstr << indent << "component index: " << pixel.component_type << ", gain: " << pixel.component_gain << "\n";
+    sstr << indent << "component index: " << pixel.component_index << ", gain: " << pixel.component_gain << "\n";
   }
   return sstr.str();
 }
@@ -1015,7 +1015,7 @@ Error Box_cpat::write(StreamWriter& writer) const
   writer.write16(m_pattern.pattern_height);
 
   for (const auto& pixel : m_pattern.pixels) {
-    writer.write32(pixel.component_type);
+    writer.write32(pixel.component_index);
     writer.write_float32(pixel.component_gain);
   }
 

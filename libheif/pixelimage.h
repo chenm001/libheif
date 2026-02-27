@@ -426,12 +426,27 @@ public:
   uint8_t get_component_storage_bits_per_pixel(uint32_t component_idx) const;
   heif_channel_datatype get_component_datatype(uint32_t component_idx) const;
 
+  // Look up the component type from the cmpd table. Works for any cmpd index,
+  // even those that have no image plane (e.g. bayer reference components).
   uint16_t get_component_type(uint32_t component_idx) const;
 
+  // Encoder path: auto-generates component_index by appending to cmpd table.
   Result<uint32_t> add_component(uint32_t width, uint32_t height,
                                  uint16_t component_type,
                                  heif_channel_datatype datatype, int bit_depth,
                                  const heif_security_limits* limits);
+
+  // Decoder path: uses a pre-populated cmpd table to look up the component type.
+  Result<uint32_t> add_component_for_index(uint32_t component_index,
+                                            uint32_t width, uint32_t height,
+                                            heif_channel_datatype datatype, int bit_depth,
+                                            const heif_security_limits* limits);
+
+  // Populate the cmpd component types table (decoder path).
+  void set_cmpd_component_types(std::vector<uint16_t> types) { m_cmpd_component_types = std::move(types); }
+
+  // Returns the sorted list of component_indices of all planes.
+  std::vector<uint32_t> get_component_indices() const;
 
   uint8_t* get_component(uint32_t component_idx, size_t* out_stride);
   const uint8_t* get_component(uint32_t component_idx, size_t* out_stride) const;
@@ -439,16 +454,16 @@ public:
   template <typename T>
   T* get_component_data(uint32_t component_idx, size_t* out_stride)
   {
-    if (component_idx >= m_planes.size()) {
+    auto* comp = find_component_by_index(component_idx);
+    if (!comp) {
       if (out_stride) *out_stride = 0;
       return nullptr;
     }
 
-    auto& comp = m_planes[component_idx];
     if (out_stride) {
-      *out_stride = comp.stride / sizeof(T);
+      *out_stride = comp->stride / sizeof(T);
     }
-    return static_cast<T*>(comp.mem);
+    return static_cast<T*>(comp->mem);
   }
 
   template <typename T>
@@ -519,7 +534,7 @@ private:
   struct ImageComponent
   {
     heif_channel m_channel = heif_channel_Y;
-    uint16_t m_component_type = 0;  // ISO 23001-17 component type (0 = monochrome)
+    uint32_t m_component_index = 0;  // index into the cmpd component definition table
 
     // limits=nullptr disables the limits
     Error alloc(uint32_t width, uint32_t height, heif_channel_datatype datatype, int bit_depth,
@@ -561,12 +576,16 @@ private:
   ImageComponent* find_component_for_channel(heif_channel channel);
   const ImageComponent* find_component_for_channel(heif_channel channel) const;
 
+  ImageComponent* find_component_by_index(uint32_t component_index);
+  const ImageComponent* find_component_by_index(uint32_t component_index) const;
+
   uint32_t m_width = 0;
   uint32_t m_height = 0;
   heif_colorspace m_colorspace = heif_colorspace_undefined;
   heif_chroma m_chroma = heif_chroma_undefined;
 
   std::vector<ImageComponent> m_planes;
+  std::vector<uint16_t> m_cmpd_component_types;  // indexed by cmpd index
   MemoryHandle m_memory_handle;
 
   uint32_t m_sample_duration = 0; // duration of a sequence frame

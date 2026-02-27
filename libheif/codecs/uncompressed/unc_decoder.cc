@@ -38,6 +38,21 @@
 #include "security_limits.h"
 
 
+static Error validate_component_indices(const std::vector<uint32_t>& indices,
+                                        size_t cmpd_size,
+                                        const char* box_name)
+{
+  for (uint32_t idx : indices) {
+    if (idx >= cmpd_size) {
+      return {heif_error_Invalid_input,
+              heif_suberror_Invalid_parameter_value,
+              std::string(box_name) + " component index out of range of cmpd table"};
+    }
+  }
+  return Error::Ok;
+}
+
+
 // --- unc_decoder ---
 
 unc_decoder::unc_decoder(uint32_t width, uint32_t height,
@@ -454,32 +469,46 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
 
   auto img = *createImgResult;
 
+  size_t cmpd_size = cmpd ? cmpd->get_components().size() : 0;
+
   if (properties.cpat) {
-    // Resolve cpat component indices to actual component types from cmpd.
-    BayerPattern pattern = properties.cpat->get_pattern();
-    const auto& cmpd_components = cmpd->get_components();
-    for (auto& pixel : pattern.pixels) {
-      uint16_t idx = pixel.component_type;
-      if (idx >= cmpd_components.size()) {
-        return Error(heif_error_Invalid_input,
-                     heif_suberror_Invalid_parameter_value,
-                     "cpat component index out of range");
-      }
-      pixel.component_type = cmpd_components[idx].component_type;
+    const auto& pattern = properties.cpat->get_pattern();
+    std::vector<uint32_t> cpat_indices;
+    for (const auto& pixel : pattern.pixels) {
+      cpat_indices.push_back(pixel.component_index);
+    }
+    Error err = validate_component_indices(cpat_indices, cmpd_size, "cpat");
+    if (err) {
+      return err;
     }
     img->set_bayer_pattern(pattern);
   }
 
   for (const auto& splz_box : properties.splz) {
-    img->add_polarization_pattern(splz_box->get_pattern());
+    const auto& pattern = splz_box->get_pattern();
+    Error err = validate_component_indices(pattern.component_indices, cmpd_size, "splz");
+    if (err) {
+      return err;
+    }
+    img->add_polarization_pattern(pattern);
   }
 
   for (const auto& sbpm_box : properties.sbpm) {
-    img->add_sensor_bad_pixels_map(sbpm_box->get_bad_pixels_map());
+    const auto& bad_pixels_map = sbpm_box->get_bad_pixels_map();
+    Error err = validate_component_indices(bad_pixels_map.component_indices, cmpd_size, "sbpm");
+    if (err) {
+      return err;
+    }
+    img->add_sensor_bad_pixels_map(bad_pixels_map);
   }
 
   for (const auto& snuc_box : properties.snuc) {
-    img->add_sensor_nuc(snuc_box->get_nuc());
+    const auto& nuc = snuc_box->get_nuc();
+    Error err = validate_component_indices(nuc.component_indices, cmpd_size, "snuc");
+    if (err) {
+      return err;
+    }
+    img->add_sensor_nuc(nuc);
   }
 
   if (properties.cloc) {
