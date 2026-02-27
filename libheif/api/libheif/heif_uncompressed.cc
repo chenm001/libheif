@@ -605,6 +605,164 @@ void heif_unci_image_parameters_release(heif_unci_image_parameters* params)
 }
 
 
+// --- index-based component access
+
+uint32_t heif_image_get_number_of_used_components(const heif_image* image)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_number_of_used_components();
+}
+
+
+uint32_t heif_image_get_total_number_of_cmpd_components(const heif_image* image)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_total_number_of_cmpd_components();
+}
+
+
+void heif_image_get_used_component_indices(const heif_image* image, uint32_t* out_component_indices)
+{
+  if (!image || !image->image || !out_component_indices) {
+    return;
+  }
+
+  auto indices = image->image->get_used_component_indices();
+  for (size_t i = 0; i < indices.size(); i++) {
+    out_component_indices[i] = indices[i];
+  }
+}
+
+
+heif_channel heif_image_get_component_channel(const heif_image* image, uint32_t component_idx)
+{
+  if (!image || !image->image) {
+    return heif_channel_Y;
+  }
+  return image->image->get_component_channel(component_idx);
+}
+
+
+uint32_t heif_image_get_component_width(const heif_image* image, uint32_t component_idx)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_component_width(component_idx);
+}
+
+
+uint32_t heif_image_get_component_height(const heif_image* image, uint32_t component_idx)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_component_height(component_idx);
+}
+
+
+int heif_image_get_component_bits_per_pixel(const heif_image* image, uint32_t component_idx)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_component_bits_per_pixel(component_idx);
+}
+
+
+uint16_t heif_image_get_component_type(const heif_image* image, uint32_t component_idx)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_component_type(component_idx);
+}
+
+
+heif_error heif_image_add_component(heif_image* image,
+                                    int width, int height,
+                                    uint16_t component_type,
+                                    heif_channel_datatype datatype,
+                                    int bit_depth,
+                                    uint32_t* out_component_idx)
+{
+  if (!image || !image->image) {
+    return heif_error_null_pointer_argument;
+  }
+
+  auto result = image->image->add_component(width, height, component_type, datatype, bit_depth, nullptr);
+  if (!result) {
+    return result.error_struct(image->image.get());
+  }
+
+  if (out_component_idx) {
+    *out_component_idx = *result;
+  }
+
+  return heif_error_success;
+}
+
+
+const uint8_t* heif_image_get_component_readonly(const heif_image* image, uint32_t component_idx, size_t* out_stride)
+{
+  if (!image || !image->image) {
+    if (out_stride) *out_stride = 0;
+    return nullptr;
+  }
+  return image->image->get_component(component_idx, out_stride);
+}
+
+
+uint8_t* heif_image_get_component(heif_image* image, uint32_t component_idx, size_t* out_stride)
+{
+  if (!image || !image->image) {
+    if (out_stride) *out_stride = 0;
+    return nullptr;
+  }
+  return image->image->get_component(component_idx, out_stride);
+}
+
+
+#define heif_image_get_component_X(name, type) \
+const type* heif_image_get_component_ ## name ## _readonly(const struct heif_image* image, \
+                                                            uint32_t component_idx, \
+                                                            size_t* out_stride) \
+{                                                            \
+  if (!image || !image->image) {                             \
+    if (out_stride) *out_stride = 0;                         \
+    return nullptr;                                          \
+  }                                                          \
+  return image->image->get_component_data<type>(component_idx, out_stride); \
+}                                                            \
+                                                             \
+type* heif_image_get_component_ ## name (struct heif_image* image, \
+                                         uint32_t component_idx,  \
+                                         size_t* out_stride)      \
+{                                                            \
+  if (!image || !image->image) {                             \
+    if (out_stride) *out_stride = 0;                         \
+    return nullptr;                                          \
+  }                                                          \
+  return image->image->get_component_data<type>(component_idx, out_stride); \
+}
+
+heif_image_get_component_X(uint16, uint16_t)
+heif_image_get_component_X(uint32, uint32_t)
+heif_image_get_component_X(uint64, uint64_t)
+heif_image_get_component_X(int8, int8_t)
+heif_image_get_component_X(int16, int16_t)
+heif_image_get_component_X(int32, int32_t)
+heif_image_get_component_X(int64, int64_t)
+heif_image_get_component_X(float32, float)
+heif_image_get_component_X(float64, double)
+heif_image_get_component_X(complex32, heif_complex32)
+heif_image_get_component_X(complex64, heif_complex64)
+
+
 heif_error heif_context_add_empty_unci_image(heif_context* ctx,
                                                     const heif_unci_image_parameters* parameters,
                                                     const heif_encoding_options* encoding_options,

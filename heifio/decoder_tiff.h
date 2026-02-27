@@ -29,7 +29,6 @@
 
 #include "decoder.h"
 #include "libheif/heif.h"
-#include "libheif/heif_experimental.h"
 #include <memory>
 #include <cstdint>
 #include <vector>

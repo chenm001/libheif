@@ -38,7 +38,6 @@ extern "C" {
 }
 
 #include "decoder_tiff.h"
-#include "libheif/heif_experimental.h"
 #include "libheif/heif_uncompressed.h"
 
 static struct heif_error heif_error_ok = {heif_error_Ok, heif_suberror_Unspecified, "Success"};
@@ -547,6 +546,7 @@ heif_error readBandInterleave(TIFF *tif, uint16_t samplesPerPixel, bool hasAlpha
 }
 
 
+#if WITH_UNCOMPRESSED_CODEC
 static heif_error readMonoFloat(TIFF* tif, heif_image** image)
 {
   uint32_t width, height;
@@ -587,6 +587,7 @@ static heif_error readMonoFloat(TIFF* tif, heif_image** image)
 
   return heif_error_ok;
 }
+#endif
 
 
 static void suppress_warnings(const char* module, const char* fmt, va_list ap) {
@@ -664,6 +665,7 @@ static heif_error readTiledContiguous(TIFF* tif, uint32_t width, uint32_t height
   bool isFloat = (sampleFormat == SAMPLEFORMAT_IEEEFP);
 
   if (isFloat) {
+#if WITH_UNCOMPRESSED_CODEC
     heif_error err = heif_image_create((int)width, (int)height, heif_colorspace_nonvisual, heif_chroma_undefined, out_image);
     if (err.code != heif_error_Ok) return err;
 
@@ -714,6 +716,10 @@ static heif_error readTiledContiguous(TIFF* tif, uint32_t width, uint32_t height
     }
 
     return heif_error_ok;
+#else
+    return {heif_error_Unsupported_feature, heif_suberror_Unspecified,
+            "Floating point TIFF requires uncompressed codec support (WITH_UNCOMPRESSED_CODEC)."};
+#endif
   }
 
   uint16_t outSpp = (samplesPerPixel == 4 && !hasAlpha) ? 3 : samplesPerPixel;
@@ -822,9 +828,14 @@ static heif_error readTiledSeparate(TIFF* tif, uint32_t width, uint32_t height,
 {
   // For mono float, separate layout is the same as contiguous (1 sample)
   if (sampleFormat == SAMPLEFORMAT_IEEEFP) {
+#if WITH_UNCOMPRESSED_CODEC
     return readTiledContiguous(tif, width, height, tile_width, tile_height,
                                samplesPerPixel, hasAlpha, bps, output_bit_depth,
                                sampleFormat, out_image);
+#else
+    return {heif_error_Unsupported_feature, heif_suberror_Unspecified,
+            "Floating point TIFF requires uncompressed codec support (WITH_UNCOMPRESSED_CODEC)."};
+#endif
   }
 
   uint16_t outSpp = (samplesPerPixel == 4 && !hasAlpha) ? 3 : samplesPerPixel;
@@ -943,7 +954,12 @@ heif_error loadTIFF(const char* filename, int output_bit_depth, InputImage *inpu
   }
   else {
     if (isFloat) {
+#if WITH_UNCOMPRESSED_CODEC
       err = readMonoFloat(tif, &image);
+#else
+      return {heif_error_Unsupported_feature, heif_suberror_Unspecified,
+              "Floating point TIFF requires uncompressed codec support (WITH_UNCOMPRESSED_CODEC)."};
+#endif
     }
     else {
       switch (config) {
@@ -1116,6 +1132,7 @@ heif_error TiledTiffReader::readTile(uint32_t tx, uint32_t ty, int output_bit_de
   uint32_t actual_h = std::min(m_tile_height, m_image_height - ty * m_tile_height);
 
   if (m_sample_format == SAMPLEFORMAT_IEEEFP) {
+#if WITH_UNCOMPRESSED_CODEC
     heif_error err = heif_image_create((int)actual_w, (int)actual_h, heif_colorspace_nonvisual, heif_chroma_undefined, out_image);
     if (err.code != heif_error_Ok) return err;
 
@@ -1155,6 +1172,10 @@ heif_error TiledTiffReader::readTile(uint32_t tx, uint32_t ty, int output_bit_de
     }
 
     return heif_error_ok;
+#else
+    return {heif_error_Unsupported_feature, heif_suberror_Unspecified,
+            "Floating point TIFF requires uncompressed codec support (WITH_UNCOMPRESSED_CODEC)."};
+#endif
   }
 
   int effectiveBitDepth = (m_bits_per_sample <= 8) ? 8 : output_bit_depth;

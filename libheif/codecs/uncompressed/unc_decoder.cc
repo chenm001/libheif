@@ -36,6 +36,7 @@
 #include "compression.h"
 #include "codecs/decoder.h"
 #include "security_limits.h"
+#include <string>
 
 
 static Error validate_component_indices(const std::vector<uint32_t>& indices,

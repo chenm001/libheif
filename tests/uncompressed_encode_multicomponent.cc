@@ -26,7 +26,7 @@
 
 #include "catch_amalgamated.hpp"
 #include "libheif/heif.h"
-#include "libheif/heif_experimental.h"
+#include "libheif/heif_uncompressed.h"
 #include "test_utils.h"
 #include <cstdint>
 #include <cstring>

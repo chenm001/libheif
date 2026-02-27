@@ -36,6 +36,7 @@
 #include <map>
 #include <sstream>
 #include "security_limits.h"
+#include <utility>
 
 
 Error UncompressedImageCodec::get_heif_chroma_uncompressed(const std::shared_ptr<const Box_uncC>& uncC,
