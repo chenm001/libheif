@@ -50,7 +50,7 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
                                                                    const heif_encoding_options& options)
 {
   bool is_nonvisual = (image->get_colorspace() == heif_colorspace_nonvisual);
-  uint32_t num_components = image->get_number_of_components();
+  uint32_t num_components = image->get_number_of_used_components();
 
   for (uint32_t idx = 0; idx < num_components; idx++) {
     heif_uncompressed_component_type comp_type;

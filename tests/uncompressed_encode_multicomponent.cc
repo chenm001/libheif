@@ -308,7 +308,7 @@ bool values_equal<heif_complex64>(heif_complex64 a, heif_complex64 b)
 template <typename T>
 static void verify_image_data(const heif_image* image)
 {
-  uint32_t num_components = heif_image_get_number_of_components(image);
+  uint32_t num_components = heif_image_get_number_of_used_components(image);
   REQUIRE(num_components == kNumComponents);
 
   for (uint32_t c = 0; c < kNumComponents; c++) {

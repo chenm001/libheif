@@ -188,23 +188,6 @@ typedef enum heif_channel_datatype
   heif_channel_datatype_complex_number = 4
 } heif_channel_datatype;
 
-#if HEIF_ENABLE_EXPERIMENTAL_FEATURES
-LIBHEIF_API
-heif_error heif_image_add_channel(heif_image* image,
-                                  enum heif_channel channel,
-                                  int width, int height,
-                                  enum heif_channel_datatype datatype,
-                                  int bit_depth);
-
-
-LIBHEIF_API
-int heif_image_list_channels(heif_image*,
-                             enum heif_channel** out_channels);
-
-LIBHEIF_API
-void heif_channel_release_list(enum heif_channel** channels);
-#endif
-
 typedef struct heif_complex32
 {
   float real, imaginary;
@@ -216,15 +199,21 @@ typedef struct heif_complex64
 } heif_complex64;
 
 #if HEIF_ENABLE_EXPERIMENTAL_FEATURES
-LIBHEIF_API
-enum heif_channel_datatype heif_image_get_datatype(const heif_image* img,
-                                                   enum heif_channel channel);
-
 
 // --- index-based component access (for ISO 23001-17 multi-component images)
 
+// Returns the number of components that have pixel data (planes) in this image.
 LIBHEIF_API
-uint32_t heif_image_get_number_of_components(const heif_image*);
+uint32_t heif_image_get_number_of_used_components(const heif_image*);
+
+// Returns the total number of components declared in the cmpd box.
+LIBHEIF_API
+uint32_t heif_image_get_total_number_of_cmpd_components(const heif_image*);
+
+// Fills `out_component_indices` with the valid component indices.
+// The caller must allocate an array of at least heif_image_get_number_of_used_components() elements.
+LIBHEIF_API
+void heif_image_get_used_component_indices(const heif_image*, uint32_t* out_component_indices);
 
 LIBHEIF_API
 enum heif_channel heif_image_get_component_channel(const heif_image*, uint32_t component_idx);

@@ -2232,7 +2232,7 @@ Result<uint32_t> HeifPixelImage::add_component_for_index(uint32_t component_inde
 }
 
 
-std::vector<uint32_t> HeifPixelImage::get_component_indices() const
+std::vector<uint32_t> HeifPixelImage::get_used_component_indices() const
 {
   std::vector<uint32_t> indices;
   indices.reserve(m_planes.size());

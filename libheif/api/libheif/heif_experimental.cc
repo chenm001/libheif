@@ -340,65 +340,36 @@ void heif_pyramid_layer_info_release(heif_pyramid_layer_info* infos)
 }
 
 
-heif_error heif_image_add_channel(heif_image* image,
-                                  heif_channel channel,
-                                  int width, int height,
-                                  heif_channel_datatype datatype, int bit_depth)
-{
-  if (auto err = image->image->add_channel(channel, width, height, datatype, bit_depth, nullptr)) {
-    return err.error_struct(image->image.get());
-  }
-  else {
-    return heif_error_success;
-  }
-}
-
-
-heif_channel_datatype heif_image_get_datatype(const heif_image* image, heif_channel channel)
-{
-  if (image == nullptr) {
-    return heif_channel_datatype_undefined;
-  }
-
-  return image->image->get_datatype(channel);
-}
-
-
-int heif_image_list_channels(heif_image* image,
-                             heif_channel** out_channels)
-{
-  if (!image || !out_channels) {
-    return 0;
-  }
-
-  auto channels = image->image->get_channel_set();
-
-  *out_channels = new heif_channel[channels.size()];
-  heif_channel* p = *out_channels;
-  for (heif_channel c : channels) {
-    *p++ = c;
-  }
-
-  assert(channels.size() < static_cast<size_t>(std::numeric_limits<int>::max()));
-
-  return static_cast<int>(channels.size());
-}
-
-
-void heif_channel_release_list(heif_channel** channels)
-{
-  delete[] channels;
-}
-
-
 // --- index-based component access
 
-uint32_t heif_image_get_number_of_components(const heif_image* image)
+uint32_t heif_image_get_number_of_used_components(const heif_image* image)
 {
   if (!image || !image->image) {
     return 0;
   }
-  return image->image->get_number_of_components();
+  return image->image->get_number_of_used_components();
+}
+
+
+uint32_t heif_image_get_total_number_of_cmpd_components(const heif_image* image)
+{
+  if (!image || !image->image) {
+    return 0;
+  }
+  return image->image->get_total_number_of_cmpd_components();
+}
+
+
+void heif_image_get_used_component_indices(const heif_image* image, uint32_t* out_component_indices)
+{
+  if (!image || !image->image || !out_component_indices) {
+    return;
+  }
+
+  auto indices = image->image->get_used_component_indices();
+  for (size_t i = 0; i < indices.size(); i++) {
+    out_component_indices[i] = indices[i];
+  }
 }
 
 

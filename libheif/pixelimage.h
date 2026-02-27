@@ -416,7 +416,9 @@ public:
 
   // --- index-based component access (for ISO 23001-17 multi-component images)
 
-  uint32_t get_number_of_components() const { return static_cast<uint32_t>(m_planes.size()); }
+  uint32_t get_number_of_used_components() const { return static_cast<uint32_t>(m_planes.size()); }
+
+  uint32_t get_total_number_of_cmpd_components() const { return static_cast<uint32_t>(m_cmpd_component_types.size()); }
 
   heif_channel get_component_channel(uint32_t component_idx) const;
 
@@ -445,8 +447,8 @@ public:
   // Populate the cmpd component types table (decoder path).
   void set_cmpd_component_types(std::vector<uint16_t> types) { m_cmpd_component_types = std::move(types); }
 
-  // Returns the sorted list of component_indices of all planes.
-  std::vector<uint32_t> get_component_indices() const;
+  // Returns the sorted list of component_indices of all planes that have pixel data.
+  std::vector<uint32_t> get_used_component_indices() const;
 
   uint8_t* get_component(uint32_t component_idx, size_t* out_stride);
   const uint8_t* get_component(uint32_t component_idx, size_t* out_stride) const;
