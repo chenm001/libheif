@@ -1283,6 +1283,7 @@ public:
 
 int do_encode_images(heif_context*, heif_encoder*, heif_encoding_options* options, const std::vector<std::string>& args);
 int do_encode_sequence(heif_context*, heif_encoder*, heif_encoding_options* options, std::vector<std::string> args);
+int add_mime_item(heif_context* context);
 
 
 int main(int argc, char** argv)
@@ -1672,10 +1673,6 @@ int main(int argc, char** argv)
     return 5;
   }
 
-  if (encode_sequence && !option_mime_item_file.empty()) {
-    std::cerr << "MIME item cannot be added to sequence-only files.\n";
-    return 5;
-  }
 
   if (!option_sai_data_file.empty() && !encode_sequence) {
     std::cerr << "Image SAI data can only be used with sequences.\n";
@@ -1889,6 +1886,15 @@ int main(int argc, char** argv)
     return ret;
   }
 
+  // --- add extra MIME item with user data
+
+  ret = add_mime_item(context.get());
+  if (ret != 0) {
+    heif_encoding_options_free(options);
+    heif_encoder_release(encoder);
+    return ret;
+  }
+
 
   // --- write HEIF file
 
@@ -1904,6 +1910,48 @@ int main(int argc, char** argv)
 
   heif_encoding_options_free(options);
   heif_encoder_release(encoder);
+
+  return 0;
+}
+
+
+int add_mime_item(heif_context* context)
+{
+  if (!option_mime_item_file.empty() || !option_mime_item_type.empty()) {
+    if (option_mime_item_file.empty() || option_mime_item_type.empty()) {
+      std::cerr << "Options --add-mime-item and --mime-item-file have to be used together\n";
+      return 5;
+    }
+
+    std::ifstream istr(option_mime_item_file.c_str(), std::ios::binary | std::ios::ate);
+    if (!istr) {
+      std::cerr << "Failed to open file for MIME item: '" << option_mime_item_file << "'\n";
+      return 5;
+    }
+
+    // Get size by seeking to the end (thanks to ios::ate)
+    std::streamsize size = istr.tellg();
+    if (size < 0) {
+      std::cerr << "Querying size of file '" << option_mime_item_file << "' failed.\n";
+      return 5;
+    }
+
+    std::vector<uint8_t> buffer(size);
+
+    // Seek back to beginning and read
+    istr.seekg(0, std::ios::beg);
+    istr.read(reinterpret_cast<char*>(buffer.data()), size);
+
+    heif_item_id itemId;
+    heif_context_add_mime_item(context, option_mime_item_type.c_str(),
+                               metadata_compression_method,
+                               buffer.data(), (int)buffer.size(),
+                               &itemId);
+
+    if (!option_mime_item_name.empty()) {
+      heif_item_set_item_name(context, itemId, option_mime_item_name.c_str());
+    }
+  }
 
   return 0;
 }
@@ -2220,44 +2268,6 @@ int do_encode_images(heif_context* context, heif_encoder* encoder, heif_encoding
     }
   }
 #endif
-
-  // --- add extra MIME item with user data
-
-  if (!option_mime_item_file.empty() || !option_mime_item_type.empty()) {
-    if (option_mime_item_file.empty() || option_mime_item_type.empty()) {
-      std::cerr << "Options --add-mime-item and --mime-item-file have to be used together\n";
-      return 5;
-    }
-
-    std::ifstream istr(option_mime_item_file.c_str(), std::ios::binary | std::ios::ate);
-    if (!istr) {
-      std::cerr << "Failed to open file for MIME item: '" << option_mime_item_file << "'\n";
-      return 5;
-    }
-
-    // Get size by seeking to the end (thanks to ios::ate)
-    std::streamsize size = istr.tellg();
-    if (size < 0) {
-      std::cerr << "Querying size of file '" << option_mime_item_file << "' failed.\n";
-      return 5;
-    }
-
-    std::vector<uint8_t> buffer(size);
-
-    // Seek back to beginning and read
-    istr.seekg(0, std::ios::beg);
-    istr.read(reinterpret_cast<char*>(buffer.data()), size);
-
-    heif_item_id itemId;
-    heif_context_add_mime_item(context, option_mime_item_type.c_str(),
-                               metadata_compression_method,
-                               buffer.data(), (int)buffer.size(),
-                               &itemId);
-
-    if (!option_mime_item_name.empty()) {
-      heif_item_set_item_name(context, itemId, option_mime_item_name.c_str());
-    }
-  }
 
   if (run_benchmark) {
     double psnr = compute_psnr(primary_image.get(), output_filename);
