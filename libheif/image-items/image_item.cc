@@ -557,6 +557,11 @@ ImageItem::add_color_profile(const std::shared_ptr<HeifPixelImage>& image,
   std::vector<std::shared_ptr<Box_colr> > colr_boxes;
 
   if (input_class == heif_image_input_class_normal || input_class == heif_image_input_class_thumbnail) {
+    // No color profile for non-visual images (e.g. elevation data)
+    if (image->get_colorspace() == heif_colorspace_nonvisual) {
+      return colr_boxes;
+    }
+
     auto icc_profile = image->get_color_profile_icc();
     if (icc_profile) {
       auto colr = std::make_shared<Box_colr>();
