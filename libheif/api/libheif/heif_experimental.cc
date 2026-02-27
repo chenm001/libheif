@@ -391,56 +391,6 @@ void heif_channel_release_list(heif_channel** channels)
 }
 
 
-#define heif_image_get_channel_X(name, type, datatype, bits) \
-const type* heif_image_get_channel_ ## name ## _readonly(const struct heif_image* image, \
-                                                         enum heif_channel channel, \
-                                                         size_t* out_stride) \
-{                                                            \
-  if (!image || !image->image) {                             \
-    *out_stride = 0;                                         \
-    return nullptr;                                          \
-  }                                                          \
-                                                             \
-  if (image->image->get_datatype(channel) != datatype) {     \
-    return nullptr;                                          \
-  }                                                          \
-  if (image->image->get_storage_bits_per_pixel(channel) != bits) {     \
-    return nullptr;                                          \
-  }                                                          \
-  return  image->image->get_channel<type>(channel, out_stride);                      \
-}                                                            \
-                                                             \
-type* heif_image_get_channel_ ## name (struct heif_image* image, \
-                                       enum heif_channel channel, \
-                                       size_t* out_stride)      \
-{                                                            \
-  if (!image || !image->image) {                             \
-    *out_stride = 0;                                         \
-    return nullptr;                                          \
-  }                                                          \
-                                                             \
-  if (image->image->get_datatype(channel) != datatype) {     \
-    return nullptr;                                          \
-  }                                                          \
-  if (image->image->get_storage_bits_per_pixel(channel) != bits) {     \
-    return nullptr;                                          \
-  }                                                          \
-  return image->image->get_channel<type>(channel, out_stride); \
-}
-
-heif_image_get_channel_X(uint16, uint16_t, heif_channel_datatype_unsigned_integer, 16)
-heif_image_get_channel_X(uint32, uint32_t, heif_channel_datatype_unsigned_integer, 32)
-heif_image_get_channel_X(uint64, uint64_t, heif_channel_datatype_unsigned_integer, 64)
-heif_image_get_channel_X(int8, int8_t, heif_channel_datatype_signed_integer, 8)
-heif_image_get_channel_X(int16, int16_t, heif_channel_datatype_signed_integer, 16)
-heif_image_get_channel_X(int32, int32_t, heif_channel_datatype_signed_integer, 32)
-heif_image_get_channel_X(int64, int64_t, heif_channel_datatype_signed_integer, 64)
-heif_image_get_channel_X(float32, float, heif_channel_datatype_floating_point, 32)
-heif_image_get_channel_X(float64, double, heif_channel_datatype_floating_point, 64)
-heif_image_get_channel_X(complex32, heif_complex32, heif_channel_datatype_complex_number, 64)
-heif_image_get_channel_X(complex64, heif_complex64, heif_channel_datatype_complex_number, 64)
-
-
 // --- index-based component access
 
 uint32_t heif_image_get_number_of_components(const heif_image* image)

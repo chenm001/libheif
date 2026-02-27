@@ -221,118 +221,6 @@ enum heif_channel_datatype heif_image_get_datatype(const heif_image* img,
                                                    enum heif_channel channel);
 
 
-// The 'stride' in all of these functions are in units of the underlying datatype.
-LIBHEIF_API
-const uint16_t* heif_image_get_channel_uint16_readonly(const heif_image*,
-                                                       enum heif_channel channel,
-                                                       size_t* out_stride);
-
-LIBHEIF_API
-const uint32_t* heif_image_get_channel_uint32_readonly(const heif_image*,
-                                                       enum heif_channel channel,
-                                                       size_t* out_stride);
-
-LIBHEIF_API
-const uint64_t* heif_image_get_channel_uint64_readonly(const heif_image*,
-                                                       enum heif_channel channel,
-                                                       size_t* out_stride);
-
-LIBHEIF_API
-const int8_t* heif_image_get_channel_int8_readonly(const heif_image*,
-                                                    enum heif_channel channel,
-                                                    size_t* out_stride);
-
-LIBHEIF_API
-const int16_t* heif_image_get_channel_int16_readonly(const heif_image*,
-                                                     enum heif_channel channel,
-                                                     size_t* out_stride);
-
-LIBHEIF_API
-const int32_t* heif_image_get_channel_int32_readonly(const heif_image*,
-                                                     enum heif_channel channel,
-                                                     size_t* out_stride);
-
-LIBHEIF_API
-const int64_t* heif_image_get_channel_int64_readonly(const heif_image*,
-                                                     enum heif_channel channel,
-                                                     size_t* out_stride);
-
-LIBHEIF_API
-const float* heif_image_get_channel_float32_readonly(const heif_image*,
-                                                     enum heif_channel channel,
-                                                     size_t* out_stride);
-
-LIBHEIF_API
-const double* heif_image_get_channel_float64_readonly(const heif_image*,
-                                                      enum heif_channel channel,
-                                                      size_t* out_stride);
-
-LIBHEIF_API
-const heif_complex32* heif_image_get_channel_complex32_readonly(const heif_image*,
-                                                                enum heif_channel channel,
-                                                                size_t* out_stride);
-
-LIBHEIF_API
-const heif_complex64* heif_image_get_channel_complex64_readonly(const heif_image*,
-                                                                enum heif_channel channel,
-                                                                size_t* out_stride);
-
-LIBHEIF_API
-uint16_t* heif_image_get_channel_uint16(heif_image*,
-                                        enum heif_channel channel,
-                                        size_t* out_stride);
-
-LIBHEIF_API
-uint32_t* heif_image_get_channel_uint32(heif_image*,
-                                        enum heif_channel channel,
-                                        size_t* out_stride);
-
-LIBHEIF_API
-uint64_t* heif_image_get_channel_uint64(heif_image*,
-                                        enum heif_channel channel,
-                                        size_t* out_stride);
-
-LIBHEIF_API
-int8_t* heif_image_get_channel_int8(heif_image*,
-                                     enum heif_channel channel,
-                                     size_t* out_stride);
-
-LIBHEIF_API
-int16_t* heif_image_get_channel_int16(heif_image*,
-                                      enum heif_channel channel,
-                                      size_t* out_stride);
-
-LIBHEIF_API
-int32_t* heif_image_get_channel_int32(heif_image*,
-                                      enum heif_channel channel,
-                                      size_t* out_stride);
-
-LIBHEIF_API
-int64_t* heif_image_get_channel_int64(heif_image*,
-                                      enum heif_channel channel,
-                                      size_t* out_stride);
-
-LIBHEIF_API
-float* heif_image_get_channel_float32(heif_image*,
-                                      enum heif_channel channel,
-                                      size_t* out_stride);
-
-LIBHEIF_API
-double* heif_image_get_channel_float64(heif_image*,
-                                       enum heif_channel channel,
-                                       size_t* out_stride);
-
-LIBHEIF_API
-heif_complex32* heif_image_get_channel_complex32(heif_image*,
-                                                 enum heif_channel channel,
-                                                 size_t* out_stride);
-
-LIBHEIF_API
-heif_complex64* heif_image_get_channel_complex64(heif_image*,
-                                                 enum heif_channel channel,
-                                                 size_t* out_stride);
-
-
 // --- index-based component access (for ISO 23001-17 multi-component images)
 
 LIBHEIF_API
@@ -357,7 +245,7 @@ LIBHEIF_API
 heif_error heif_image_add_component(heif_image* image,
                                     int width, int height,
                                     uint16_t component_type,
-                                    enum heif_channel_datatype datatype,
+                                    heif_channel_datatype datatype,
                                     int bit_depth,
                                     uint32_t* out_component_idx);
 
