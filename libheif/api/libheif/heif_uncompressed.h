@@ -201,6 +201,50 @@ heif_error heif_image_get_sensor_bad_pixels_map_data(const heif_image*,
                                                       struct heif_bad_pixel* out_bad_pixels);
 
 
+// --- Sensor non-uniformity correction (ISO 23001-17, Section 6.1.6)
+
+// Add a sensor non-uniformity correction table to an image.
+// component_indices: array of component indices this NUC applies to (may be NULL if num_component_indices == 0,
+//                    meaning it applies to all components).
+// nuc_gains and nuc_offsets: arrays of image_width * image_height float values.
+// Correction equation: y = nuc_gain * x + nuc_offset.
+// Multiple NUC tables can be added (one per distinct component group).
+LIBHEIF_API
+heif_error heif_image_add_sensor_nuc(heif_image*,
+                                      uint32_t num_component_indices,
+                                      const uint32_t* component_indices,
+                                      int nuc_is_applied,
+                                      uint32_t image_width,
+                                      uint32_t image_height,
+                                      const float* nuc_gains,
+                                      const float* nuc_offsets);
+
+// Returns the number of sensor NUC tables on this image (0 if none).
+LIBHEIF_API
+int heif_image_get_number_of_sensor_nucs(const heif_image*);
+
+// Get the sizes of a sensor NUC table (to allocate arrays for the data query).
+LIBHEIF_API
+heif_error heif_image_get_sensor_nuc_info(const heif_image*,
+                                           int nuc_index,
+                                           uint32_t* out_num_component_indices,
+                                           int* out_nuc_is_applied,
+                                           uint32_t* out_image_width,
+                                           uint32_t* out_image_height);
+
+// Get the actual data of a sensor NUC table.
+// Caller must provide pre-allocated arrays:
+//   out_component_indices: num_component_indices entries (may be NULL if num_component_indices == 0)
+//   out_nuc_gains: image_width * image_height entries
+//   out_nuc_offsets: image_width * image_height entries
+LIBHEIF_API
+heif_error heif_image_get_sensor_nuc_data(const heif_image*,
+                                           int nuc_index,
+                                           uint32_t* out_component_indices,
+                                           float* out_nuc_gains,
+                                           float* out_nuc_offsets);
+
+
 // --- 'unci' images
 
 // This is similar to heif_metadata_compression. We should try to keep the integers compatible, but each enum will just

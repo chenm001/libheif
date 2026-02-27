@@ -397,6 +397,128 @@ heif_error heif_image_get_sensor_bad_pixels_map_data(const heif_image* image,
 }
 
 
+heif_error heif_image_add_sensor_nuc(heif_image* image,
+                                      uint32_t num_component_indices,
+                                      const uint32_t* component_indices,
+                                      int nuc_is_applied,
+                                      uint32_t image_width,
+                                      uint32_t image_height,
+                                      const float* nuc_gains,
+                                      const float* nuc_offsets)
+{
+  if (image == nullptr || nuc_gains == nullptr || nuc_offsets == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_component_indices > 0 && component_indices == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (image_width == 0 || image_height == 0) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "NUC image dimensions must be non-zero."};
+  }
+
+  SensorNonUniformityCorrection nuc;
+  nuc.component_indices.assign(component_indices, component_indices + num_component_indices);
+  nuc.nuc_is_applied = (nuc_is_applied != 0);
+  nuc.image_width = image_width;
+  nuc.image_height = image_height;
+
+  size_t num_pixels = size_t{image_width} * image_height;
+  nuc.nuc_gains.assign(nuc_gains, nuc_gains + num_pixels);
+  nuc.nuc_offsets.assign(nuc_offsets, nuc_offsets + num_pixels);
+
+  image->image->add_sensor_nuc(nuc);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_number_of_sensor_nucs(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return static_cast<int>(image->image->get_sensor_nuc().size());
+}
+
+
+heif_error heif_image_get_sensor_nuc_info(const heif_image* image,
+                                           int nuc_index,
+                                           uint32_t* out_num_component_indices,
+                                           int* out_nuc_is_applied,
+                                           uint32_t* out_image_width,
+                                           uint32_t* out_image_height)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& nucs = image->image->get_sensor_nuc();
+  if (nuc_index < 0 || static_cast<size_t>(nuc_index) >= nucs.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor NUC index out of range."};
+  }
+
+  const auto& n = nucs[nuc_index];
+  if (out_num_component_indices) {
+    *out_num_component_indices = static_cast<uint32_t>(n.component_indices.size());
+  }
+  if (out_nuc_is_applied) {
+    *out_nuc_is_applied = n.nuc_is_applied ? 1 : 0;
+  }
+  if (out_image_width) {
+    *out_image_width = n.image_width;
+  }
+  if (out_image_height) {
+    *out_image_height = n.image_height;
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_get_sensor_nuc_data(const heif_image* image,
+                                           int nuc_index,
+                                           uint32_t* out_component_indices,
+                                           float* out_nuc_gains,
+                                           float* out_nuc_offsets)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& nucs = image->image->get_sensor_nuc();
+  if (nuc_index < 0 || static_cast<size_t>(nuc_index) >= nucs.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor NUC index out of range."};
+  }
+
+  const auto& n = nucs[nuc_index];
+
+  if (out_component_indices && !n.component_indices.empty()) {
+    std::copy(n.component_indices.begin(), n.component_indices.end(), out_component_indices);
+  }
+
+  size_t num_pixels = size_t{n.image_width} * n.image_height;
+
+  if (out_nuc_gains && !n.nuc_gains.empty()) {
+    std::copy(n.nuc_gains.begin(), n.nuc_gains.begin() + num_pixels, out_nuc_gains);
+  }
+
+  if (out_nuc_offsets && !n.nuc_offsets.empty()) {
+    std::copy(n.nuc_offsets.begin(), n.nuc_offsets.begin() + num_pixels, out_nuc_offsets);
+  }
+
+  return heif_error_success;
+}
+
+
 heif_unci_image_parameters* heif_unci_image_parameters_alloc()
 {
   auto* params = new heif_unci_image_parameters();

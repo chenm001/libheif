@@ -478,6 +478,10 @@ Result<std::shared_ptr<HeifPixelImage> > unc_decoder::decode_full_image(
     img->add_sensor_bad_pixels_map(sbpm_box->get_bad_pixels_map());
   }
 
+  for (const auto& snuc_box : properties.snuc) {
+    img->add_sensor_nuc(snuc_box->get_nuc());
+  }
+
   auto decoderResult = unc_decoder_factory::get_unc_decoder(width, height, cmpd, uncC);
   if (!decoderResult) {
     return decoderResult.error();

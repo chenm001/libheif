@@ -680,6 +680,10 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
       box = std::make_shared<Box_sbpm>();
       break;
 
+    case fourcc("snuc"):
+      box = std::make_shared<Box_snuc>();
+      break;
+
     case fourcc("uncv"):
       box = std::make_shared<Box_uncv>();
       break;

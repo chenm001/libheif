@@ -430,6 +430,32 @@ protected:
 };
 
 
+/**
+ * Sensor non-uniformity correction box (snuc).
+ *
+ * Provides per-pixel gain and offset tables for sensor non-uniformity
+ * correction. The correction equation is: y = nuc_gain * x + nuc_offset.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.6.
+ */
+class Box_snuc : public FullBox
+{
+public:
+  Box_snuc() { set_short_type(fourcc("snuc")); }
+
+  const SensorNonUniformityCorrection& get_nuc() const { return m_nuc; }
+  void set_nuc(const SensorNonUniformityCorrection& nuc) { m_nuc = nuc; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  SensorNonUniformityCorrection m_nuc;
+};
+
+
 void fill_uncC_and_cmpd_from_profile(const std::shared_ptr<Box_uncC>& uncC,
                                      std::shared_ptr<Box_cmpd>& cmpd);
 

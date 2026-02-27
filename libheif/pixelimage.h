@@ -67,6 +67,16 @@ struct SensorBadPixelsMap
   std::vector<BadPixel> bad_pixels;
 };
 
+struct SensorNonUniformityCorrection
+{
+  std::vector<uint32_t> component_indices;  // empty = applies to all components
+  bool nuc_is_applied = false;
+  uint32_t image_width = 0;
+  uint32_t image_height = 0;
+  std::vector<float> nuc_gains;    // image_width * image_height entries
+  std::vector<float> nuc_offsets;  // image_width * image_height entries
+};
+
 heif_chroma chroma_from_subsampling(int h, int v);
 
 uint32_t chroma_width(uint32_t w, heif_chroma chroma);
@@ -240,6 +250,17 @@ public:
   virtual void add_sensor_bad_pixels_map(const SensorBadPixelsMap& m) { m_sensor_bad_pixels_maps.push_back(m); }
 
 
+  // --- sensor non-uniformity correction
+
+  bool has_sensor_nuc() const { return !m_sensor_nuc.empty(); }
+
+  const std::vector<SensorNonUniformityCorrection>& get_sensor_nuc() const { return m_sensor_nuc; }
+
+  virtual void set_sensor_nuc(const std::vector<SensorNonUniformityCorrection>& n) { m_sensor_nuc = n; }
+
+  virtual void add_sensor_nuc(const SensorNonUniformityCorrection& n) { m_sensor_nuc.push_back(n); }
+
+
 #if HEIF_WITH_OMAF
   bool has_omaf_image_projection() const {
     return (m_omaf_image_projection != heif_omaf_image_projection_flat);
@@ -273,6 +294,8 @@ private:
   std::vector<PolarizationPattern> m_polarization_patterns;
 
   std::vector<SensorBadPixelsMap> m_sensor_bad_pixels_maps;
+
+  std::vector<SensorNonUniformityCorrection> m_sensor_nuc;
 
 #if HEIF_WITH_OMAF
   heif_omaf_image_projection m_omaf_image_projection = heif_omaf_image_projection::heif_omaf_image_projection_flat;

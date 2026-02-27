@@ -1246,3 +1246,104 @@ Error Box_sbpm::write(StreamWriter& writer) const
 
   return Error::Ok;
 }
+
+
+Error Box_snuc::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("snuc");
+  }
+
+  uint32_t component_count = range.read32();
+
+  if (limits->max_components && component_count > limits->max_components) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            "snuc component_count exceeds security limit."};
+  }
+
+  m_nuc.component_indices.resize(component_count);
+  for (uint32_t i = 0; i < component_count; i++) {
+    m_nuc.component_indices[i] = range.read32();
+  }
+
+  uint8_t flags = range.read8();
+  m_nuc.nuc_is_applied = !!(flags & 0x80);
+
+  m_nuc.image_width = range.read32();
+  m_nuc.image_height = range.read32();
+
+  uint64_t num_pixels = static_cast<uint64_t>(m_nuc.image_width) * m_nuc.image_height;
+
+  if (limits->max_image_size_pixels && num_pixels > limits->max_image_size_pixels) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            "snuc image dimensions exceed security limit."};
+  }
+
+  m_nuc.nuc_gains.resize(num_pixels);
+  for (uint64_t i = 0; i < num_pixels; i++) {
+    m_nuc.nuc_gains[i] = range.read_float32();
+  }
+
+  m_nuc.nuc_offsets.resize(num_pixels);
+  for (uint64_t i = 0; i < num_pixels; i++) {
+    m_nuc.nuc_offsets[i] = range.read_float32();
+  }
+
+  return range.get_error();
+}
+
+
+std::string Box_snuc::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+
+  sstr << FullBox::dump(indent);
+
+  sstr << indent << "component_count: " << m_nuc.component_indices.size() << "\n";
+  for (size_t i = 0; i < m_nuc.component_indices.size(); i++) {
+    sstr << indent << "  component_index[" << i << "]: " << m_nuc.component_indices[i] << "\n";
+  }
+
+  sstr << indent << "nuc_is_applied: " << m_nuc.nuc_is_applied << "\n";
+  sstr << indent << "image_width: " << m_nuc.image_width << "\n";
+  sstr << indent << "image_height: " << m_nuc.image_height << "\n";
+
+  uint64_t num_pixels = static_cast<uint64_t>(m_nuc.image_width) * m_nuc.image_height;
+  sstr << indent << "nuc_gains: " << num_pixels << " values\n";
+  sstr << indent << "nuc_offsets: " << num_pixels << " values\n";
+
+  return sstr.str();
+}
+
+
+Error Box_snuc::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write32(static_cast<uint32_t>(m_nuc.component_indices.size()));
+  for (uint32_t idx : m_nuc.component_indices) {
+    writer.write32(idx);
+  }
+
+  uint8_t flags = m_nuc.nuc_is_applied ? 0x80 : 0;
+  writer.write8(flags);
+
+  writer.write32(m_nuc.image_width);
+  writer.write32(m_nuc.image_height);
+
+  for (float gain : m_nuc.nuc_gains) {
+    writer.write_float32(gain);
+  }
+
+  for (float offset : m_nuc.nuc_offsets) {
+    writer.write_float32(offset);
+  }
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}

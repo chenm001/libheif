@@ -159,6 +159,14 @@ unc_encoder_component_interleave::unc_encoder_component_interleave(const std::sh
       m_sbpm.push_back(sbpm);
     }
   }
+
+  if (image->has_sensor_nuc()) {
+    for (const auto& nuc : image->get_sensor_nuc()) {
+      auto snuc = std::make_shared<Box_snuc>();
+      snuc->set_nuc(nuc);
+      m_snuc.push_back(snuc);
+    }
+  }
 }
 
 
