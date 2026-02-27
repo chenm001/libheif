@@ -32,6 +32,10 @@
 
 #include "codecs/uncompressed/unc_types.h"
 
+#if WITH_UNCOMPRESSED_CODEC
+#include "codecs/uncompressed/unc_boxes.h"
+#endif
+
 
 heif_chroma chroma_from_subsampling(int h, int v)
 {
@@ -316,6 +320,14 @@ std::vector<std::shared_ptr<Box>> ImageExtraData::generate_property_boxes(bool g
     auto prfr = std::make_shared<Box_prfr>();
     prfr->set_image_projection(get_omaf_image_projection());
     properties.push_back(prfr);
+  }
+#endif
+
+#if WITH_UNCOMPRESSED_CODEC
+  if (has_component_content_ids()) {
+    auto ccid = std::make_shared<Box_gimi_component_content_ids>();
+    ccid->set_content_ids(get_component_content_ids());
+    properties.push_back(ccid);
   }
 #endif
 
@@ -1959,6 +1971,10 @@ void HeifPixelImage::forward_all_metadata_from(const std::shared_ptr<const HeifP
 
   if (src_image->has_gimi_sample_content_id()) {
     set_gimi_sample_content_id(src_image->get_gimi_sample_content_id());
+  }
+
+  if (src_image->has_component_content_ids()) {
+    set_component_content_ids(src_image->get_component_content_ids());
   }
 
   if (auto* tai = src_image->get_tai_timestamp()) {

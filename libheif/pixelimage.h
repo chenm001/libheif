@@ -204,6 +204,13 @@ public:
   std::string get_gimi_sample_content_id() const { assert(has_gimi_sample_content_id()); return *m_gimi_sample_content_id; }
 
 
+  void set_component_content_ids(const std::vector<std::string>& ids) { m_component_content_ids = ids; }
+
+  bool has_component_content_ids() const { return !m_component_content_ids.empty(); }
+
+  const std::vector<std::string>& get_component_content_ids() const { return m_component_content_ids; }
+
+
   // --- bayer pattern
 
   bool has_bayer_pattern() const { return m_bayer_pattern.has_value(); }
@@ -282,6 +289,8 @@ private:
   heif_tai_timestamp_packet* m_tai_timestamp = nullptr;
 
   std::optional<std::string> m_gimi_sample_content_id;
+
+  std::vector<std::string> m_component_content_ids;
 
   std::optional<BayerPattern> m_bayer_pattern;
 

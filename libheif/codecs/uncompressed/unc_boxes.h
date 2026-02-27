@@ -495,4 +495,45 @@ public:
 };
 
 
+/**
+ * GIMI ItemComponentContentIDProperty.
+ *
+ * A UUID-type item property that assigns a unique Content ID string
+ * to each cmpd component of an image item.
+ *
+ * UUID: 9db9dd6e-373c-5a4e-8110-21fc83a911fd
+ */
+class Box_gimi_component_content_ids : public Box
+{
+public:
+  Box_gimi_component_content_ids()
+  {
+    set_uuid_type(std::vector<uint8_t>{0x9d, 0xb9, 0xdd, 0x6e, 0x37, 0x3c, 0x5a, 0x4e,
+                                       0x81, 0x10, 0x21, 0xfc, 0x83, 0xa9, 0x11, 0xfd});
+  }
+
+  bool is_essential() const override { return false; }
+
+  bool is_transformative_property() const override { return false; }
+
+  std::string dump(Indent&) const override;
+
+  const char* debug_box_name() const override { return "GIMI Component Content IDs"; }
+
+  const std::vector<std::string>& get_content_ids() const { return m_content_ids; }
+
+  void set_content_ids(const std::vector<std::string>& ids) { m_content_ids = ids; }
+
+  [[nodiscard]] parse_error_fatality get_parse_error_fatality() const override { return parse_error_fatality::ignorable; }
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits*) override;
+
+  Error write(StreamWriter& writer) const override;
+
+private:
+  std::vector<std::string> m_content_ids;
+};
+
+
 #endif //LIBHEIF_UNC_BOXES_H

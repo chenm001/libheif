@@ -1405,3 +1405,58 @@ Error Box_cloc::write(StreamWriter& writer) const
 
   return Error::Ok;
 }
+
+
+Error Box_gimi_component_content_ids::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  uint32_t number_of_components = range.read32();
+
+  if (limits->max_components && number_of_components > limits->max_components) {
+    std::stringstream sstr;
+    sstr << "GIMI component content IDs box contains " << number_of_components
+         << " components, but security limit is set to " << limits->max_components << " components";
+    return {heif_error_Invalid_input,
+            heif_suberror_Security_limit_exceeded,
+            sstr.str()};
+  }
+
+  for (uint32_t i = 0; i < number_of_components; i++) {
+    if (range.eof()) {
+      return {heif_error_Invalid_input,
+              heif_suberror_End_of_data,
+              "Not enough data for all component content IDs"};
+    }
+    m_content_ids.push_back(range.read_string());
+  }
+
+  return range.get_error();
+}
+
+
+Error Box_gimi_component_content_ids::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write32(static_cast<uint32_t>(m_content_ids.size()));
+
+  for (const auto& id : m_content_ids) {
+    writer.write(id);
+  }
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}
+
+
+std::string Box_gimi_component_content_ids::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+  sstr << Box::dump(indent);
+
+  for (size_t i = 0; i < m_content_ids.size(); i++) {
+    sstr << indent << "[" << i << "] content ID: " << m_content_ids[i] << "\n";
+  }
+
+  return sstr.str();
+}
