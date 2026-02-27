@@ -217,6 +217,7 @@ static void print_usage()
             << "       heif-gen-bayer -S [options] <frame_NNN.png> <output.mp4>\n\n"
             << "Options:\n"
             << "  -h, --help              show this help\n"
+            << "  -b, --bit-depth #       output bit depth (default: 8, range: 8-16)\n"
             << "  -p, --pattern <name>    filter array pattern (default: rggb)\n"
             << "  -S, --sequence          sequence mode (expand numbered PNGs)\n"
             << "  -V, --video             use video track handler (vide) instead of pict\n"
@@ -232,11 +233,12 @@ static void print_usage()
 
 
 static struct option long_options[] = {
-    {(char* const) "help",     no_argument,       nullptr, 'h'},
-    {(char* const) "pattern",  required_argument, nullptr, 'p'},
-    {(char* const) "sequence", no_argument,       nullptr, 'S'},
-    {(char* const) "video",    no_argument,       nullptr, 'V'},
-    {(char* const) "fps",      required_argument, nullptr, 'f'},
+    {(char* const) "help",      no_argument,       nullptr, 'h'},
+    {(char* const) "bit-depth", required_argument, nullptr, 'b'},
+    {(char* const) "pattern",   required_argument, nullptr, 'p'},
+    {(char* const) "sequence",  no_argument,       nullptr, 'S'},
+    {(char* const) "video",     no_argument,       nullptr, 'V'},
+    {(char* const) "fps",       required_argument, nullptr, 'f'},
     {nullptr, 0, nullptr, 0}
 };
 
@@ -245,11 +247,12 @@ static struct option long_options[] = {
 // If expected_width/expected_height are non-zero, the PNG must match those dimensions.
 static heif_image* create_bayer_image_from_png(const char* png_filename,
                                                const PatternDefinition* pat,
+                                               int output_bit_depth,
                                                int expected_width,
                                                int expected_height)
 {
   InputImage input_image;
-  heif_error err = loadPNG(png_filename, 8, &input_image);
+  heif_error err = loadPNG(png_filename, output_bit_depth, &input_image);
   if (err.code != heif_error_Ok) {
     std::cerr << "Cannot load PNG '" << png_filename << "': " << err.message << "\n";
     return nullptr;
@@ -259,12 +262,6 @@ static heif_image* create_bayer_image_from_png(const char* png_filename,
 
   int width = heif_image_get_primary_width(src_img);
   int height = heif_image_get_primary_height(src_img);
-
-  int bpp = heif_image_get_bits_per_pixel_range(src_img, heif_channel_interleaved);
-  if (bpp != 8) {
-    std::cerr << "Only 8-bit PNG input is supported. Got " << bpp << " bits per pixel.\n";
-    return nullptr;
-  }
 
   if (expected_width != 0 && (width != expected_width || height != expected_height)) {
     std::cerr << "Frame '" << png_filename << "' has dimensions " << width << "x" << height
@@ -298,37 +295,70 @@ static heif_image* create_bayer_image_from_png(const char* png_filename,
     return nullptr;
   }
 
-  err = heif_image_add_plane(bayer_img, heif_channel_filter_array, width, height, 8);
+  err = heif_image_add_plane(bayer_img, heif_channel_filter_array, width, height, output_bit_depth);
   if (err.code != heif_error_Ok) {
     std::cerr << "Cannot add plane: " << err.message << "\n";
     heif_image_release(bayer_img);
     return nullptr;
   }
 
-  int dst_stride;
-  uint8_t* dst_data = heif_image_get_plane(bayer_img, heif_channel_filter_array, &dst_stride);
-
   // Convert RGB to filter array using the selected pattern
-  for (int y = 0; y < height; y++) {
-    const uint8_t* src_row = src_data + y * src_stride;
-    uint8_t* dst_row = dst_data + y * dst_stride;
+  if (output_bit_depth == 8) {
+    int dst_stride;
+    uint8_t* dst_data = heif_image_get_plane(bayer_img, heif_channel_filter_array, &dst_stride);
 
-    for (int x = 0; x < width; x++) {
-      uint8_t r = src_row[x * 3 + 0];
-      uint8_t g = src_row[x * 3 + 1];
-      uint8_t b = src_row[x * 3 + 2];
+    for (int y = 0; y < height; y++) {
+      const uint8_t* src_row = src_data + y * src_stride;
+      uint8_t* dst_row = dst_data + y * dst_stride;
 
-      int px = x % pat->width;
-      int py = y % pat->height;
-      uint16_t comp_type = pat->cpat[py * pat->width + px].component_type;
+      for (int x = 0; x < width; x++) {
+        uint8_t r = src_row[x * 3 + 0];
+        uint8_t g = src_row[x * 3 + 1];
+        uint8_t b = src_row[x * 3 + 2];
 
-      switch (comp_type) {
-        case heif_uncompressed_component_type_red:   dst_row[x] = r; break;
-        case heif_uncompressed_component_type_green: dst_row[x] = g; break;
-        case heif_uncompressed_component_type_blue:  dst_row[x] = b; break;
-        case heif_uncompressed_component_type_Y: dst_row[x] = static_cast<uint8_t>((r + g + b) / 3); break;
-        default:
-          assert(false);
+        int px = x % pat->width;
+        int py = y % pat->height;
+        uint16_t comp_type = pat->cpat[py * pat->width + px].component_type;
+
+        switch (comp_type) {
+          case heif_uncompressed_component_type_red:   dst_row[x] = r; break;
+          case heif_uncompressed_component_type_green: dst_row[x] = g; break;
+          case heif_uncompressed_component_type_blue:  dst_row[x] = b; break;
+          case heif_uncompressed_component_type_Y: dst_row[x] = static_cast<uint8_t>((r + g + b) / 3); break;
+          default:
+            assert(false);
+        }
+      }
+    }
+  }
+  else {
+    int dst_stride;
+    uint8_t* dst_raw = heif_image_get_plane(bayer_img, heif_channel_filter_array, &dst_stride);
+    auto* dst_data = reinterpret_cast<uint16_t*>(dst_raw);
+    int dst_stride16 = dst_stride / 2;
+
+    for (int y = 0; y < height; y++) {
+      const uint8_t* src_row = src_data + y * src_stride;
+      uint16_t* dst_row = dst_data + y * dst_stride16;
+
+      for (int x = 0; x < width; x++) {
+        // Source is little-endian uint16_t per component, 3 components per pixel
+        uint16_t r = src_row[x * 6 + 0] | (src_row[x * 6 + 1] << 8);
+        uint16_t g = src_row[x * 6 + 2] | (src_row[x * 6 + 3] << 8);
+        uint16_t b = src_row[x * 6 + 4] | (src_row[x * 6 + 5] << 8);
+
+        int px = x % pat->width;
+        int py = y % pat->height;
+        uint16_t comp_type = pat->cpat[py * pat->width + px].component_type;
+
+        switch (comp_type) {
+          case heif_uncompressed_component_type_red:   dst_row[x] = r; break;
+          case heif_uncompressed_component_type_green: dst_row[x] = g; break;
+          case heif_uncompressed_component_type_blue:  dst_row[x] = b; break;
+          case heif_uncompressed_component_type_Y: dst_row[x] = static_cast<uint16_t>((r + g + b) / 3); break;
+          default:
+            assert(false);
+        }
       }
     }
   }
@@ -349,6 +379,7 @@ static heif_image* create_bayer_image_from_png(const char* png_filename,
 
 static int encode_sequence(const std::vector<std::string>& filenames,
                            const PatternDefinition* pat,
+                           int output_bit_depth,
                            int fps,
                            bool use_video_handler,
                            const char* output_filename)
@@ -371,6 +402,7 @@ static int encode_sequence(const std::vector<std::string>& filenames,
 
   for (size_t i = 0; i < filenames.size(); i++) {
     heif_image* bayer_img = create_bayer_image_from_png(filenames[i].c_str(), pat,
+                                                        output_bit_depth,
                                                         first_width, first_height);
     if (!bayer_img) {
       heif_sequence_encoding_options_release(enc_options);
@@ -453,13 +485,14 @@ static int encode_sequence(const std::vector<std::string>& filenames,
 int main(int argc, char* argv[])
 {
   const PatternDefinition* pat = &patterns[0]; // default: RGGB
+  int output_bit_depth = 8;
   bool sequence_mode = false;
   bool use_video_handler = false;
   int fps = 30;
 
   while (true) {
     int option_index = 0;
-    int c = getopt_long(argc, argv, "hp:SV", long_options, &option_index);
+    int c = getopt_long(argc, argv, "hb:p:SV", long_options, &option_index);
     if (c == -1)
       break;
 
@@ -467,6 +500,14 @@ int main(int argc, char* argv[])
       case 'h':
         print_usage();
         return 0;
+
+      case 'b':
+        output_bit_depth = std::atoi(optarg);
+        if (output_bit_depth < 8 || output_bit_depth > 16) {
+          std::cerr << "Invalid bit depth: " << optarg << " (must be 8-16)\n";
+          return 1;
+        }
+        break;
 
       case 'p':
         pat = find_pattern(optarg);
@@ -517,12 +558,12 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Found " << filenames.size() << " frame(s), encoding at " << fps << " fps\n";
-    return encode_sequence(filenames, pat, fps, use_video_handler, output_filename);
+    return encode_sequence(filenames, pat, output_bit_depth, fps, use_video_handler, output_filename);
   }
 
   // --- Single image mode
 
-  heif_image* bayer_img = create_bayer_image_from_png(input_filename, pat, 0, 0);
+  heif_image* bayer_img = create_bayer_image_from_png(input_filename, pat, output_bit_depth, 0, 0);
   if (!bayer_img) {
     return 1;
   }
