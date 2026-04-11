@@ -360,8 +360,8 @@ static void kvazaar_query_input_colorspace2(void* encoder_raw, heif_colorspace* 
 void kvazaar_query_encoded_size(void* encoder_raw, uint32_t input_width, uint32_t input_height,
                                 uint32_t* encoded_width, uint32_t* encoded_height)
 {
-  *encoded_width = (input_width + 7) & ~0x7;
-  *encoded_height = (input_height + 7) & ~0x7;
+  *encoded_width = (input_width + 7) & ~0x7U;
+  *encoded_height = (input_height + 7) & ~0x7U;
 }
 
 

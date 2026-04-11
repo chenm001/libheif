@@ -359,8 +359,8 @@ static void uvg266_query_input_colorspace2(void* encoder_raw, heif_colorspace* c
 void uvg266_query_encoded_size(void* encoder_raw, uint32_t input_width, uint32_t input_height,
                                uint32_t* encoded_width, uint32_t* encoded_height)
 {
-  *encoded_width = (input_width + 7) & ~0x7;
-  *encoded_height = (input_height + 7) & ~0x7;
+  *encoded_width = (input_width + 7) & ~0x7U;
+  *encoded_height = (input_height + 7) & ~0x7U;
 }
 
 
@@ -831,20 +831,14 @@ static heif_error uvg266_end_sequence_encoding(void* encoder_raw)
     }
 
     if (data == nullptr || data->len == 0) {
+      encoder->api->chunk_free(data);
+      encoder->api->picture_free(src_out);
       break;
     }
 
     encoder->append_chunk_data(data, (int)src_out->pts);
 
-    encoder->api->picture_free(src_out);
-    src_out = nullptr;
-  }
-
-  (void) success;
-
-  if (src_out) {
-    encoder->append_chunk_data(data, (int)src_out->pts);
-
+    encoder->api->chunk_free(data);
     encoder->api->picture_free(src_out);
     src_out = nullptr;
   }

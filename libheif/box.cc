@@ -3569,9 +3569,9 @@ Error Box_clap::write(StreamWriter& writer) const
   writer.write32(m_clean_aperture_width.denominator);
   writer.write32(m_clean_aperture_height.numerator);
   writer.write32(m_clean_aperture_height.denominator);
-  writer.write32(m_horizontal_offset.numerator);
+  writer.write32s(m_horizontal_offset.numerator);
   writer.write32(m_horizontal_offset.denominator);
-  writer.write32(m_vertical_offset.numerator);
+  writer.write32s(m_vertical_offset.numerator);
   writer.write32(m_vertical_offset.denominator);
 
   prepend_header(writer, box_start);

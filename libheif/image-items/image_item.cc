@@ -748,8 +748,6 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
 
   // --- apply image transformations
 
-  Error error;
-
   if (options.ignore_transformations == false) {
     Result<std::vector<std::shared_ptr<Box>>> propertiesResult = get_properties();
     if (!propertiesResult) {
@@ -762,7 +760,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
       if (auto rot = std::dynamic_pointer_cast<Box_irot>(property)) {
         auto rotateResult = img->rotate_ccw(rot->get_rotation_ccw(), m_heif_context->get_security_limits());
         if (!rotateResult) {
-          return error;
+          return rotateResult.error();
         }
 
         img = *rotateResult;
@@ -773,7 +771,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
         auto mirrorResult = img->mirror_inplace(mirror->get_mirror_direction(),
                                                 get_context()->get_security_limits());
         if (!mirrorResult) {
-          return error;
+          return mirrorResult.error();
         }
         img = *mirrorResult;
       }
